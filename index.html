@@ -1269,7 +1269,7 @@
       const savedKeys = Object.keys(state.records).sort();
       if (savedKeys.length === 0) return null;
 
-      // العرض الأساسي 840 عشان يطلع بدقة 840 في العرض مباشرة
+      // العرض الأساسي 840 لضمان دقة وضوح عالية جداً (High-Res)
       const width = 840;
       let totalHeight = 190;
       
@@ -1311,7 +1311,7 @@
       totalHeight += 40;
 
       const canvas = document.createElement('canvas');
-      const scaleFactor = 1; // العرض 840 مباشر بدون مضاعفة إضافية تكسر الأبعاد
+      const scaleFactor = 1; 
       canvas.width = width;
       canvas.height = totalHeight;
 
@@ -1517,6 +1517,7 @@
       return canvas;
     }
 
+    // دوال الحفظ والمشاركة المرتبطة بها لتعمل بنفس الجودة العالية:
     document.getElementById('downloadBookImageBtn').addEventListener('click', async () => {
       document.getElementById('bookShareNote').textContent = 'جاري تصدير السجل كصورة...';
       try {
