@@ -1,0 +1,1580 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المتابعة اليومية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- مكتبة html2canvas للتقارير الأسبوعية -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            pink: '#C93A8C',
+            blue: '#107EAF',
+            bg: '#F8F6FA',
+            card: '#FFFFFF',
+            text: '#30253A'
+          }
+        },
+        fontFamily: {
+          sans: ['Tajawal', 'sans-serif']
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background-color: #F8F6FA;
+    color: #30253A;
+  }
+  .brand-gradient {
+    background: linear-gradient(135deg, #C93A8C 0%, #107EAF 100%);
+  }
+  .brand-gradient-soft {
+    background: linear-gradient(135deg, rgba(201, 58, 140, 0.05) 0%, rgba(16, 126, 175, 0.05) 100%);
+  }
+  @keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+  .animate-modal {
+    animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .animate-heart-only {
+    animation: heartPulse 1.8s infinite ease-in-out;
+    display: inline-block;
+  }
+  .smart-input:focus {
+    border-color: #107EAF;
+    box-shadow: 0 0 0 4px rgba(16, 126, 175, 0.12), 0 4px 12px rgba(16, 126, 175, 0.08);
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #F1EDF2;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #C93A8C;
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body class="bg-[#F8F6FA] text-[#30253A] min-h-screen pb-20 flex flex-col items-center justify-center">
+
+  <!-- شاشة التحميل التلقائي مع اللوجو النابض -->
+  <div id="autoLoginLoader" class="fixed inset-0 bg-[#F8F6FA] z-50 flex flex-col items-center justify-center p-4">
+    <div class="animate-heart-only mb-4 w-20 h-20 flex items-center justify-center">
+      <img src="logo.png" alt="Logo" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">
+    </div>
+    <p class="text-xs font-bold text-[#107EAF]">جاري تجهيز بياناتك... 💚</p>
+  </div>
+
+  <!-- 1. شاشة تسجيل دخول الحالة -->
+  <div id="authOverlay" class="fixed inset-0 bg-[#30253A]/60 backdrop-blur-md z-40 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-[2rem] shadow-2xl max-w-sm w-full p-7 text-center border border-slate-100 relative overflow-hidden flex flex-col items-center">
+      
+      <!-- الترحيب، اسم الدكتور، والشارات المعبرة -->
+      <div class="mb-4 w-full">
+        <span class="inline-block text-[11px] font-bold text-[#107EAF] bg-[#107EAF]/10 px-3.5 py-1.5 rounded-full mb-2">
+          مرحبا بك فى نظام المتابعة الغذائية
+        </span>
+        <h1 class="text-base font-black text-[#C93A8C] mb-3">د. محمد السيد علي</h1>
+        
+        <!-- الصف الأول: 3 شارات -->
+        <div class="grid grid-cols-3 gap-1 text-[9.5px] text-slate-600 font-semibold mb-1">
+          <span class="bg-[#F8F6FA] px-1 py-1 rounded-lg border border-slate-100 flex items-center justify-center gap-0.5 whitespace-nowrap">🏃‍♂️ الحركة والنشاط</span>
+          <span class="bg-[#F8F6FA] px-1 py-1 rounded-lg border border-slate-100 flex items-center justify-center gap-0.5 whitespace-nowrap">💧 الترطيب اليومي</span>
+          <span class="bg-[#F8F6FA] px-1 py-1 rounded-lg border border-slate-100 flex items-center justify-center gap-0.5 whitespace-nowrap">🍽️ مواعيد الوجبات</span>
+        </div>
+
+        <!-- الصف الثاني: 3 شارات -->
+        <div class="grid grid-cols-3 gap-1 text-[9.5px] text-slate-600 font-semibold mb-2">
+          <span class="bg-[#F8F6FA] px-1 py-1 rounded-lg border border-slate-100 flex items-center justify-center gap-0.5 whitespace-nowrap">🥩 كمية البروتين</span>
+          <span class="bg-[#F8F6FA] px-1 py-1 rounded-lg border border-slate-100 flex items-center justify-center gap-0.5 whitespace-nowrap">🌙 جودة النوم</span>
+          <span class="bg-[#F8F6FA] px-1 py-1 rounded-lg border border-slate-100 flex items-center justify-center gap-0.5 whitespace-nowrap">🍯 السكريات والبدائل</span>
+        </div>
+
+        <!-- شارة متابعة يومية متكاملة -->
+        <div class="mt-3 flex justify-center">
+          <span class="bg-[#107EAF]/5 text-[#107EAF] px-3.5 py-1.5 rounded-xl border border-[#107EAF]/15 flex items-center justify-center gap-1.5 text-[10px] font-bold">
+            🎯 متابعة يومية متكاملة
+          </span>
+        </div>
+      </div>
+
+      <!-- اللوجو النابض مكاناً للقلب -->
+      <div class="my-3 flex items-center justify-center w-full">
+        <div class="animate-heart-only w-20 h-20 flex items-center justify-center">
+          <img src="logo.png" alt="Logo" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">
+        </div>
+      </div>
+
+      <h2 class="font-bold text-lg text-[#30253A] mb-1">تسجيل المتابعة</h2>
+      <p class="text-xs text-slate-400 mb-5">أدخل الكود الخاص بك للمتابعة</p>
+
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3.5 w-full">
+        <div class="relative">
+          <input type="text" id="userCode" placeholder="أدخل الكود" required
+            class="w-full px-4 py-3 text-center text-sm font-semibold rounded-2xl border border-slate-200 bg-[#F8F6FA]/50 focus:outline-none focus:border-[#107EAF] focus:bg-white focus:ring-4 focus:ring-[#107EAF]/10 transition-all">
+        </div>
+
+        <!-- خانة تذكرني للموبايل -->
+        <div class="flex items-center gap-2 px-1 text-right">
+          <input type="checkbox" id="rememberMe" class="w-4 h-4 accent-[#107EAF] rounded cursor-pointer">
+          <label for="rememberMe" class="text-xs text-slate-600 font-bold cursor-pointer select-none">تذكرني دائماً على هذا الجهاز 💚</label>
+        </div>
+        
+        <button type="submit" id="loginBtn"
+          class="w-full py-3 px-4 brand-gradient text-white font-bold text-sm rounded-2xl shadow-lg shadow-[#107EAF]/25 hover:opacity-95 transition-all">
+          دخول للمتابعة
+        </button>
+        
+        <p id="loginError" class="text-xs text-rose-500 font-bold hidden bg-rose-50 py-2 rounded-xl">عذراً، هذا الكود غير صحيح أو غير مُفعل!</p>
+      </form>
+      
+      <p class="text-[11px] text-slate-400 mt-5">بوابة المتابعة اليومية الآمنة 🔒</p>
+    </div>
+  </div>
+
+  <!-- 2. محتوى واجهتك الأساسية بالكامل -->
+  <div id="appContent" class="hidden w-full">
+
+    <header class="bg-white border-b border-slate-200 shadow-xs sticky top-0 z-30">
+      <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
+        
+        <!-- اللوجو + العنوان واسم المريض على اليمين -->
+        <div class="flex items-center gap-3">
+          <!-- اللوجو بدون إطار على اليمين -->
+          <div id="logoSlot" class="w-11 h-11 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <img id="logoImg" src="logo.png" alt="شعار التطبيق" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('logoPlaceholder').style.display='flex';">
+            <div id="logoPlaceholder" class="w-full h-full text-[10px] text-slate-400 font-bold items-center justify-center hidden">الشعار</div>
+          </div>
+
+          <div class="flex flex-col justify-center">
+            <h1 class="font-black text-xl sm:text-2xl tracking-tight text-[#30253A] leading-tight">المتابعة اليومية</h1>
+            <p id="welcomeUser" class="text-xs text-[#107EAF] font-bold mt-1 leading-none">أهلاً بك 💚</p>
+          </div>
+        </div>
+
+        <!-- زر الخروج على اليسار -->
+        <div class="flex items-center">
+          <button onclick="logout()" class="text-xs bg-slate-100 text-slate-600 font-bold px-3 py-2 rounded-xl hover:bg-slate-200 transition-all">خروج</button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-xl mx-auto px-4 mt-4 space-y-4">
+
+      <!-- 1. أسبوع المتابعة -->
+      <section class="bg-white border border-[#E8DCE8] rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div>
+            <h2 class="font-extrabold text-[#762454] text-base flex items-center gap-2">
+              <span class="w-2 h-4 rounded-full brand-gradient inline-block"></span> متابعة الأيام
+            </h2>
+            <p id="monthLabel" class="text-[11px] text-[#107EAF] font-bold mt-0.5">رحلتك اليومية نحو صحة أفضل 🌱</p>
+          </div>
+          <div class="bg-[#FBEAF3] text-[#762454] border border-[#C93A8C]/20 text-[11px] font-bold px-2.5 py-1 rounded-xl" id="completedCount">
+            0 أيام مسجلة
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between bg-[#F8F6FA] p-1.5 rounded-xl border border-slate-200/60">
+          <button id="prevDays" class="w-8 h-8 rounded-lg bg-white shadow-xs text-[#C93A8C] border border-[#C93A8C]/20 font-black flex items-center justify-center hover:bg-[#FBEAF3] transition active:scale-95">›</button>
+          <span class="text-xs font-bold text-slate-700" id="weekRangeIndicator">فترة المتابعة</span>
+          <button id="nextDays" class="w-8 h-8 rounded-lg bg-white shadow-xs text-[#C93A8C] border border-[#C93A8C]/20 font-black flex items-center justify-center hover:bg-[#FBEAF3] transition active:scale-95">‹</button>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1.5" id="calendar"></div>
+      </section>
+
+      <!-- 2. تقرير اليوم -->
+      <section class="bg-white border border-[#E8DCE8] rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div>
+            <h2 class="font-extrabold text-[#762454] text-base flex items-center gap-2">
+              <span class="w-2 h-4 rounded-full brand-gradient inline-block"></span> تقرير اليوم
+            </h2>
+            <span id="selectedDateLabel" class="text-xs font-bold text-[#107EAF]">اليوم</span>
+          </div>
+          <span id="saveStatus" class="text-xs font-bold px-2.5 py-0.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200">لم يتم التسجيل 📝</span>
+        </div>
+
+        <form id="dailyForm" class="space-y-3">
+          
+          <!-- Activity Field -->
+          <div class="p-3 rounded-xl border border-slate-200 bg-[#FAFAFC] space-y-2">
+            <label class="block font-extrabold text-xs text-[#762454]">🏃 النشاط البدني</label>
+            <div class="grid grid-cols-2 gap-2" id="activityChoices">
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C] has-[:checked]:text-[#762454]">
+                <input type="radio" name="activity" value="تمارين في المنزل" class="accent-[#C93A8C] w-4 h-4">
+                <span class="text-xs font-bold">تمارين في المنزل</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C] has-[:checked]:text-[#762454]">
+                <input type="radio" name="activity" value="المشي خارج المنزل" class="accent-[#C93A8C] w-4 h-4">
+                <span class="text-xs font-bold">المشي خارج المنزل</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C] has-[:checked]:text-[#762454]">
+                <input type="radio" name="activity" value="الجيم" class="accent-[#C93A8C] w-4 h-4">
+                <span class="text-xs font-bold">الجيم</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C] has-[:checked]:text-[#762454]">
+                <input type="radio" name="activity" value="لم أمارس نشاطًا" class="accent-[#C93A8C] w-4 h-4">
+                <span class="text-xs font-bold">لم أمارس نشاطا</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Water Field -->
+          <div class="p-3 rounded-xl border border-slate-200 bg-[#FAFAFC] space-y-2">
+            <label class="block font-extrabold text-xs text-[#762454]">💧 شرب المياه</label>
+            <div class="grid grid-cols-3 sm:grid-cols-5 gap-2" id="waterChoices">
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#107EAF] transition has-[:checked]:bg-sky-50 has-[:checked]:border-[#107EAF] has-[:checked]:text-[#107EAF] text-center">
+                <input type="radio" name="water" value="500 مل" class="accent-[#107EAF] w-3.5 h-3.5 flex-shrink-0">
+                <span class="text-[11px] font-bold whitespace-nowrap">500 مل</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#107EAF] transition has-[:checked]:bg-sky-50 has-[:checked]:border-[#107EAF] has-[:checked]:text-[#107EAF] text-center">
+                <input type="radio" name="water" value="1000 مل" class="accent-[#107EAF] w-3.5 h-3.5 flex-shrink-0">
+                <span class="text-[11px] font-bold whitespace-nowrap">1000 مل</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#107EAF] transition has-[:checked]:bg-sky-50 has-[:checked]:border-[#107EAF] has-[:checked]:text-[#107EAF] text-center">
+                <input type="radio" name="water" value="1500 مل" class="accent-[#107EAF] w-3.5 h-3.5 flex-shrink-0">
+                <span class="text-[11px] font-bold whitespace-nowrap">1500 مل</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#107EAF] transition has-[:checked]:bg-sky-50 has-[:checked]:border-[#107EAF] has-[:checked]:text-[#107EAF] text-center">
+                <input type="radio" name="water" value="2000 مل" class="accent-[#107EAF] w-3.5 h-3.5 flex-shrink-0">
+                <span class="text-[11px] font-bold whitespace-nowrap">2000 مل</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#107EAF] transition has-[:checked]:bg-sky-50 has-[:checked]:border-[#107EAF] has-[:checked]:text-[#107EAF] text-center col-span-2 sm:col-span-1">
+                <input type="radio" name="water" value="2500 مل" class="accent-[#107EAF] w-3.5 h-3.5 flex-shrink-0">
+                <span class="text-[11px] font-bold whitespace-nowrap">2500 مل</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Meals, Protein, Sweets Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Meals Commitment -->
+            <div class="p-3 rounded-xl border border-slate-200 bg-[#FAFAFC] space-y-2">
+              <label class="block font-extrabold text-xs text-[#762454]">🍽️ مواعيد الوجبات</label>
+              <div class="space-y-1.5">
+                <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                  <input type="radio" name="meals" value="التزمت" class="accent-[#C93A8C] w-3.5 h-3.5">
+                  <span class="text-xs font-bold">التزمت بالوجبات</span>
+                </label>
+                <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                  <input type="radio" name="meals" value="تغيير بسيط" class="accent-[#C93A8C] w-3.5 h-3.5">
+                  <span class="text-xs font-bold">تغيير بسيط</span>
+                </label>
+                <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                  <input type="radio" name="meals" value="لم أتمكن من الالتزام" class="accent-[#C93A8C] w-3.5 h-3.5">
+                  <span class="text-xs font-bold">لم أتمكن من الالتزام</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Protein & Sweets Column -->
+            <div class="space-y-2.5">
+              <div class="p-3 rounded-xl border border-slate-200 bg-[#FAFAFC] space-y-1.5">
+                <label class="block font-extrabold text-xs text-[#762454]">🥚 كمية البروتين</label>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C] text-center">
+                    <input type="radio" name="protein" value="حققت الكمية" class="accent-[#C93A8C] w-3 h-3">
+                    <span class="text-[11px] font-bold">حققت الكمية</span>
+                  </label>
+                  <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C] text-center">
+                    <input type="radio" name="protein" value="أقل من المطلوب" class="accent-[#C93A8C] w-3 h-3">
+                    <span class="text-[11px] font-bold">أقل من المطلوب</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl border border-slate-200 bg-[#FAFAFC] space-y-1.5">
+                <label class="block font-extrabold text-xs text-[#762454]">🍫 السكريات والحلويات</label>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-1.5 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                    <input type="radio" name="sweets" value="لا توجد إضافات" class="accent-[#C93A8C] w-3 h-3">
+                    <span class="text-[11px] font-bold">بدون إضافات</span>
+                  </label>
+                  <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-1.5 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                    <input type="radio" name="sweets" value="إضافات خارج الخطة" class="accent-[#C93A8C] w-3 h-3">
+                    <span class="text-[11px] font-bold">خارج الخطة</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sleep Quality -->
+          <div class="p-3 rounded-xl border border-slate-200 bg-[#FAFAFC] space-y-2">
+            <label class="block font-extrabold text-xs text-[#762454]">😴 جودة النوم</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#107EAF] transition has-[:checked]:bg-sky-50 has-[:checked]:border-[#107EAF] text-center">
+                <input type="radio" name="sleep" value="جيد" class="accent-[#107EAF] w-3.5 h-3.5">
+                <span class="text-xs font-bold">جيد</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#107EAF] transition has-[:checked]:bg-sky-50 has-[:checked]:border-[#107EAF] text-center">
+                <input type="radio" name="sleep" value="متقطع" class="accent-[#107EAF] w-3.5 h-3.5">
+                <span class="text-xs font-bold">متقطع</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center justify-center gap-1 bg-white hover:border-[#107EAF] transition has-[:checked]:bg-sky-50 has-[:checked]:border-[#107EAF] text-center">
+                <input type="radio" name="sleep" value="غير كاف" class="accent-[#107EAF] w-3.5 h-3.5">
+                <span class="text-xs font-bold">غير كاف</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Difficulties -->
+          <div class="p-3 rounded-xl border border-slate-200 bg-[#FAFAFC] space-y-2">
+            <label class="block font-extrabold text-xs text-[#762454]">🧩 أكبر صعوبة واجهتك؟</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="difficultyChoices">
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                <input type="checkbox" name="difficulty" value="لم أواجه صعوبات" class="accent-[#C93A8C] w-4 h-4 rounded">
+                <span class="text-xs font-bold">لم أواجه صعوبات</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                <input type="checkbox" name="difficulty" value="الجوع أو عدم الشبع" class="accent-[#C93A8C] w-4 h-4 rounded">
+                <span class="text-xs font-bold">الجوع أو عدم الشبع</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                <input type="checkbox" name="difficulty" value="الرغبة في الحلويات أو الأكل العشوائي" class="accent-[#C93A8C] w-4 h-4 rounded">
+                <span class="text-xs font-bold">الرغبة في الحلويات</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                <input type="checkbox" name="difficulty" value="صعوبة النشاط البدني" class="accent-[#C93A8C] w-4 h-4 rounded">
+                <span class="text-xs font-bold">صعوبة النشاط البدني</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                <input type="checkbox" name="difficulty" value="قلة النوم أو الإرهاق" class="accent-[#C93A8C] w-4 h-4 rounded">
+                <span class="text-xs font-bold">قلة النوم أو الإرهاق</span>
+              </label>
+              <label class="cursor-pointer border border-slate-200 rounded-xl p-2 flex items-center gap-2 bg-white hover:border-[#C93A8C] transition has-[:checked]:bg-[#FBEAF3] has-[:checked]:border-[#C93A8C]">
+                <input type="checkbox" name="difficulty" value="سبب آخر" class="accent-[#C93A8C] w-4 h-4 rounded">
+                <span class="text-xs font-bold">سبب آخر</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Other Difficulty details -->
+          <div id="otherDifficultyWrap" class="hidden space-y-1">
+            <label class="block font-bold text-xs text-slate-700">تفاصيل السبب الآخر:</label>
+            <textarea id="otherDifficulty" name="otherDifficulty" rows="2" placeholder="اكتبي تفاصيل السبب الآخر هنا..." class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#C93A8C] outline-none min-h-[50px] resize-y break-words"></textarea>
+          </div>
+
+          <!-- Daily Notes -->
+          <div class="p-3 rounded-xl border border-slate-200 bg-[#FAFAFC] space-y-1.5">
+            <label for="dailyNotes" class="block font-extrabold text-xs text-[#762454]">📝 ملاحظات إضافية</label>
+            <textarea id="dailyNotes" name="dailyNotes" placeholder="اكتبي أي ملاحظات عن يومك..." class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#C93A8C] outline-none min-h-[50px] resize-y"></textarea>
+          </div>
+
+          <!-- Form Action Buttons -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            <button type="button" id="saveDayBtn" class="w-full bg-[#FBEAF3] hover:bg-[#F4D3E6] text-[#762454] border border-[#C93A8C]/30 font-bold py-2.5 px-3 rounded-xl transition active:scale-95 flex items-center justify-center gap-2 text-xs shadow-xs">
+              <span>💾 حفظ بيانات اليوم</span>
+            </button>
+            <button type="button" id="prepareReportBtn" class="w-full brand-gradient hover:opacity-95 text-white font-bold py-2.5 px-3 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 text-xs">
+              <span>✨ عرض التقرير اليومي</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- CREATIVE DAILY REPORT CARD PREVIEW -->
+        <div id="reportBox" class="hidden mt-4 p-4 rounded-2xl bg-gradient-to-br from-[#FBEAF3]/70 via-white to-sky-50 border-2 border-[#C93A8C]/30 shadow-lg space-y-3 relative overflow-hidden">
+          <div class="absolute -top-10 -left-10 w-32 h-32 bg-[#C93A8C]/10 rounded-full blur-xl pointer-events-none"></div>
+          <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-[#107EAF]/10 rounded-full blur-xl pointer-events-none"></div>
+
+          <div id="dailyImageContainer" class="space-y-3 bg-transparent">
+            <div class="flex items-center justify-between border-b border-[#C93A8C]/20 pb-2.5 relative z-10">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-xl brand-gradient text-white flex items-center justify-center font-bold text-xs shadow-sm">🌿</span>
+                <div>
+                  <h3 class="font-black text-[#762454] text-xs">بطاقة إنجاز اليوم</h3>
+                  <p id="cardDateSubtitle" class="text-[10px] text-[#107EAF] font-bold">السبت</p>
+                </div>
+              </div>
+              <span id="cardPatientName" class="text-[9px] bg-white text-[#C93A8C] border border-[#C93A8C]/30 px-2 py-0.5 rounded-full font-extrabold shadow-2xs">اسم المريض</span>
+            </div>
+
+            <!-- Visual Badges Grid for Daily Card -->
+            <div id="dailyVisualBadges" class="grid grid-cols-2 sm:grid-cols-3 gap-2 relative z-10"></div>
+
+            <!-- Difficulty Box in UI -->
+            <div id="dailyCardDifficultyWrap" class="hidden bg-[#FFFBFA] border border-red-100 p-2.5 rounded-xl relative z-10">
+              <p class="text-[10px] font-extrabold text-red-600 mb-0.5">⚠️ الصعوبات:</p>
+              <p id="dailyCardDifficultyText" class="text-[11px] text-slate-700 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"></p>
+            </div>
+
+            <!-- Daily Notes Box if exists -->
+            <div id="dailyCardNotesWrap" class="hidden bg-white/90 border border-slate-200 p-2.5 rounded-xl relative z-10">
+              <p class="text-[10px] font-extrabold text-[#762454] mb-0.5">📝 ملاحظاتك:</p>
+              <p id="dailyCardNotesText" class="text-[11px] text-slate-700 italic whitespace-pre-wrap break-words [overflow-wrap:anywhere]"></p>
+            </div>
+          </div>
+
+          <div class="flex gap-2 pt-1 relative z-10">
+            <button type="button" id="shareBtn" class="flex-1 bg-[#107EAF] hover:bg-[#0E6C97] text-white font-bold py-2 px-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+              <span>📤 مشاركة الصورة</span>
+            </button>
+            <button type="button" id="downloadDailyImageBtn" class="flex-1 bg-white hover:bg-slate-100 text-[#762454] border border-[#C93A8C]/30 font-bold py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+              <span>📥 حفظ الصورة</span>
+            </button>
+          </div>
+          <p id="shareNote" class="text-[11px] text-[#762454] text-center relative z-10"></p>
+        </div>
+      </section>
+
+      <!-- 3. تقرير المتابعة الاسبوعي -->
+      <section class="bg-white border-2 border-[#107EAF]/30 rounded-2xl p-4 shadow-sm space-y-3 brand-gradient-soft">
+        <div class="flex items-center justify-between border-b border-slate-200/60 pb-2.5">
+          <div>
+            <h2 class="font-extrabold text-[#107EAF] text-base flex items-center gap-2">
+              <span class="w-2 h-4 rounded-full brand-gradient inline-block"></span> تقرير المتابعة الاسبوعي
+            </h2>
+            <p class="text-[11px] text-slate-500 mt-0.5">تفاصيل أيامك ورحلتك الصحية  📊</p>
+          </div>
+          <button type="button" id="openJournalBookBtn" class="brand-gradient hover:opacity-95 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow-md transition active:scale-95 flex items-center gap-1.5">
+            <span>📖 عرض التقرير الاسبوعي</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- DIGITAL JOURNAL BOOK MODAL -->
+  <div id="journalModal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-6 hidden">
+    <div class="bg-[#FCFBFC] w-full max-w-2xl rounded-2xl border-4 border-[#C93A8C]/30 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      
+      <div class="brand-gradient text-white p-4 flex items-center justify-between relative">
+        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-md"></div>
+        <div>
+          <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-bold uppercase">نظرة شاملة على يومياتك وعاداتك الغذائية 📖</span>
+          <h3 id="bookTitleRange" class="font-black text-sm sm:text-base mt-1">التقرير الاسبوعي</h3>
+        </div>
+        <button type="button" id="closeJournalModal" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold flex items-center justify-center text-base transition">✕</button>
+      </div>
+
+      <div class="bg-[#FBEAF3]/50 px-4 py-2.5 border-b border-[#C93A8C]/20 grid grid-cols-3 gap-2 text-center">
+        <div class="bg-white p-2 rounded-xl border border-[#C93A8C]/20 shadow-2xs">
+          <span class="block text-[10px] text-slate-500 font-bold">الأيام المسجلة</span>
+          <span id="bookStatDays" class="text-xs font-black text-[#762454]">0 / 7</span>
+        </div>
+        <div class="bg-white p-2 rounded-xl border border-[#107EAF]/20 shadow-2xs">
+          <span class="block text-[10px] text-slate-500 font-bold">إجمالي المياه</span>
+          <span id="bookStatWater" class="text-xs font-black text-[#107EAF]">0 مل</span>
+        </div>
+        <div class="bg-white p-2 rounded-xl border border-amber-200 shadow-2xs">
+          <span class="block text-[10px] text-slate-500 font-bold">نسبة الإنجاز</span>
+          <span id="bookStatScore" class="text-xs font-black text-amber-600">0%</span>
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1 bg-slate-50/50" id="weeklyImageContainer">
+        <div style="text-align:center; font-weight:800; font-size:14px; color:#C93A8C; padding-bottom:4px; border-bottom:2px solid #E3EBE6;" class="hidden" id="bookExportHeader">
+          🌟 التقرير الاسبوعي 🌟
+        </div>
+        <div id="bookPagesContainer" class="space-y-3"></div>
+      </div>
+
+      <div class="p-3 bg-white border-t border-slate-200 flex gap-2">
+        <button type="button" id="shareBookBtn" class="flex-1 brand-gradient text-white font-bold py-2.5 px-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5">
+          <span>📤 مشاركة التقرير الاسبوعي</span>
+        </button>
+        <button type="button" id="downloadBookImageBtn" class="flex-1 bg-white hover:bg-slate-100 text-[#762454] border border-[#C93A8C]/30 font-bold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+          <span>📥 حفظ التقرير الاسبوعي</span>
+        </button>
+      </div>
+      <p id="bookShareNote" class="text-[11px] text-slate-500 text-center pb-2 bg-white"></p>
+    </div>
+  </div>
+
+  <footer class="text-center text-[11px] text-slate-400 mt-6">
+    <p>بوابة المتابعة اليومية الآمنة 🔒</p>
+  </footer>
+
+  <!-- جافاسكريبت التطبيق الشامل مع خاصية التذكر التلقائي -->
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz_E09e7FlUf_hlAyBXfuCSSoOHHkWBcNhawFQ0WySSynW7ZjNkqJsBFARIbXqjQVzX/exec";
+    const SECRET_TOKEN = "MY_SUPER_SECRET_KEY_2026"; 
+
+    let currentCode = "";
+    let currentPatientName = "";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const state = {
+      selectedDate: new Date(today),
+      viewAnchorDate: new Date(today),
+      records: {}
+    };
+
+    const monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const weekdays = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+
+    function dateKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    }
+
+    function formatDate(date) {
+      return `${weekdays[date.getDay()]} ${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    function getLocalStorageKey() {
+      return `daily_health_records_${currentCode}`;
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const saved = localStorage.getItem(getLocalStorageKey());
+        state.records = saved ? JSON.parse(saved) : {};
+      } catch (e) {
+        state.records = {};
+      }
+    }
+
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem(getLocalStorageKey(), JSON.stringify(state.records));
+      } catch (e) {}
+    }
+
+    // --- فحص الذاكرة عند فتح الصفحة للدخول التلقائي ---
+    window.addEventListener('DOMContentLoaded', async () => {
+      const savedCode = localStorage.getItem('saved_patient_code');
+      if (savedCode) {
+        try {
+          const response = await fetch(`${WEB_APP_URL}?token=${SECRET_TOKEN}&action=verify&code=${encodeURIComponent(savedCode)}`);
+          const result = await response.json();
+
+          if (result.success) {
+            currentCode = savedCode;
+            currentPatientName = result.name || "مريض";
+
+            document.getElementById('autoLoginLoader').style.display = 'none';
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('appContent').classList.remove('hidden');
+            document.getElementById('welcomeUser').innerText = `أهلاً بك يا ${currentPatientName} 💚`;
+            
+            loadFromLocalStorage();
+            syncFromServerToLocal();
+
+            renderCalendar();
+            selectDate(today);
+            return;
+          }
+        } catch (e) {
+          currentCode = savedCode;
+          currentPatientName = localStorage.getItem('saved_patient_name') || "مريض";
+
+          document.getElementById('autoLoginLoader').style.display = 'none';
+          document.getElementById('authOverlay').style.display = 'none';
+          document.getElementById('appContent').classList.remove('hidden');
+          document.getElementById('welcomeUser').innerText = `أهلاً بك يا ${currentPatientName} 💚 (وضع عدم الاتصال)`;
+          loadFromLocalStorage();
+          renderCalendar();
+          selectDate(today);
+          return;
+        }
+      }
+
+      document.getElementById('autoLoginLoader').style.display = 'none';
+      document.getElementById('authOverlay').style.display = 'flex';
+    });
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const codeInput = document.getElementById('userCode').value.trim();
+      const rememberMe = document.getElementById('rememberMe').checked;
+      const errorMsg = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
+
+      if (!codeInput) return;
+
+      btn.disabled = true;
+      btn.innerText = "جاري التحقق...";
+      errorMsg.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${WEB_APP_URL}?token=${SECRET_TOKEN}&action=verify&code=${encodeURIComponent(codeInput)}`);
+        const result = await response.json();
+
+        if (result.success) {
+          currentCode = codeInput;
+          currentPatientName = result.name || "مريض";
+
+          if (rememberMe) {
+            localStorage.setItem('saved_patient_code', currentCode);
+            localStorage.setItem('saved_patient_name', currentPatientName);
+          } else {
+            localStorage.removeItem('saved_patient_code');
+            localStorage.removeItem('saved_patient_name');
+          }
+
+          document.getElementById('authOverlay').style.display = 'none';
+          document.getElementById('appContent').classList.remove('hidden');
+          document.getElementById('welcomeUser').innerText = `أهلاً بك يا ${currentPatientName} 💚`;
+          
+          loadFromLocalStorage();
+          syncFromServerToLocal();
+
+          renderCalendar();
+          selectDate(today);
+        } else {
+          errorMsg.classList.remove('hidden');
+        }
+      } catch (error) {
+        currentCode = codeInput;
+        currentPatientName = "مريض";
+        
+        if (rememberMe) {
+          localStorage.setItem('saved_patient_code', currentCode);
+          localStorage.setItem('saved_patient_name', currentPatientName);
+        }
+
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('appContent').classList.remove('hidden');
+        document.getElementById('welcomeUser').innerText = `أهلاً بك 💚 (وضع عدم الاتصال)`;
+        loadFromLocalStorage();
+        renderCalendar();
+        selectDate(today);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "دخول للمتابعة";
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('saved_patient_code');
+      localStorage.removeItem('saved_patient_name');
+
+      currentCode = "";
+      currentPatientName = "";
+      state.records = {};
+      document.getElementById('userCode').value = "";
+      document.getElementById('appContent').classList.add('hidden');
+      document.getElementById('authOverlay').style.display = 'flex';
+      document.getElementById('loginError').classList.add('hidden');
+    }
+
+    async function syncFromServerToLocal() {
+      try {
+        const response = await fetch(`${WEB_APP_URL}?token=${SECRET_TOKEN}&action=getData&code=${encodeURIComponent(currentCode)}`);
+        const rows = await response.json();
+        
+        if (rows && Array.isArray(rows) && rows.length > 0) {
+          state.records = {};
+          rows.forEach(row => {
+            let dateK = String(row[2] || "").trim();
+            let jsonStr = row[3];
+            if (dateK && jsonStr) {
+              try {
+                let parsedData = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+                state.records[dateK] = parsedData;
+              } catch (e) {}
+            }
+          });
+          saveToLocalStorage();
+          renderCalendar();
+          fillForm(state.records[dateKey(state.selectedDate)] || {});
+        }
+      } catch (err) {}
+    }
+
+    async function sendRecordToServer(dateK, formData) {
+      try {
+        await fetch(WEB_APP_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            token: SECRET_TOKEN,
+            code: currentCode,
+            dateKey: dateK,
+            recordData: JSON.stringify(formData)
+          })
+        });
+      } catch (error) {}
+    }
+
+    function renderCalendar() {
+      const cal = document.getElementById('calendar');
+      cal.innerHTML = '';
+
+      const totalDaysShown = 7;
+      const baseDate = new Date(state.viewAnchorDate);
+      const dates = [];
+      for (let i = 0; i < totalDaysShown; i++) {
+        const d = new Date(baseDate);
+        d.setDate(baseDate.getDate() + i);
+        dates.push(d);
+      }
+
+      const selectedKey = dateKey(state.selectedDate);
+
+      dates.forEach((date) => {
+        const key = dateKey(date);
+        const isDone = !!state.records[key] && Object.values(state.records[key]).some(v => Array.isArray(v) ? v.length > 0 : !!v);
+        const isSelected = (key === selectedKey);
+        const isToday = (key === dateKey(today));
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        
+        if (isSelected) {
+          btn.className = 'flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent text-white shadow-md transform scale-105';
+          btn.style.background = 'linear-gradient(135deg, #C93A8C 0%, #107EAF 100%)';
+        } else if (isDone) {
+          btn.className = 'flex flex-col items-center justify-center p-1.5 rounded-xl border border-[#C93A8C]/30 text-[#762454] hover:bg-[#F4D3E6] transition-all';
+          btn.style.background = '#FBEAF3';
+        } else {
+          btn.className = 'flex flex-col items-center justify-center p-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all';
+          btn.style.background = '#FFFFFF';
+        }
+
+        btn.innerHTML = `
+          <span class="text-[9px] font-bold opacity-90 mb-0.5 pointer-events-none">${weekdays[date.getDay()]}</span>
+          <span class="text-xs font-black pointer-events-none">${date.getDate()}</span>
+          <span class="w-1 h-1 rounded-full mt-1 ${isDone ? (isSelected ? 'bg-white' : 'bg-[#C93A8C]') : 'bg-transparent'} pointer-events-none"></span>
+        `;
+
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          selectDate(date);
+        });
+
+        cal.appendChild(btn);
+      });
+
+      document.getElementById('weekRangeIndicator').textContent = `${formatDate(state.selectedDate)}`;
+      const totalSavedDays = Object.keys(state.records).filter(k => {
+        const r = state.records[k];
+        return r && Object.values(r).some(v => Array.isArray(v) ? v.length > 0 : !!v);
+      }).length;
+      document.getElementById('completedCount').textContent = `${totalSavedDays} أيام مسجلة`;
+    }
+
+    function getFormData() {
+      const form = document.getElementById('dailyForm');
+      const data = {
+        otherDifficulty: document.getElementById('otherDifficulty').value.trim(),
+        dailyNotes: document.getElementById('dailyNotes').value.trim()
+      };
+
+      ['water', 'activity', 'meals', 'protein', 'sweets', 'sleep'].forEach(name => {
+        const checked = form.querySelector(`input[name="${name}"]:checked`);
+        data[name] = checked ? checked.value : '';
+      });
+
+      data.difficulty = [...form.querySelectorAll('input[name="difficulty"]:checked')].map(el => el.value);
+      return data;
+    }
+
+    function fillForm(data = {}) {
+      document.getElementById('otherDifficulty').value = data.otherDifficulty || '';
+      document.getElementById('dailyNotes').value = data.dailyNotes || '';
+
+      ['water', 'activity', 'meals', 'protein', 'sweets', 'sleep'].forEach(name => {
+        const savedVal = String(data[name] || "").trim();
+        document.querySelectorAll(`input[name="${name}"]`).forEach(el => {
+          el.checked = (String(el.value).trim() === savedVal);
+        });
+      });
+
+      const savedDifficulties = Array.isArray(data.difficulty) ? data.difficulty.map(s => String(s).trim()) : [];
+      document.querySelectorAll('input[name="difficulty"]').forEach(el => {
+        el.checked = savedDifficulties.includes(String(el.value).trim());
+      });
+
+      updateOtherDifficultyVisibility();
+      document.getElementById('reportBox').classList.add('hidden');
+      
+      const hasData = data && Object.values(data).some(v => Array.isArray(v) ? v.length > 0 : !!v);
+      const statusEl = document.getElementById('saveStatus');
+      if (hasData) {
+        statusEl.textContent = 'تم الحفظ ✓';
+        statusEl.className = 'text-xs font-bold px-2.5 py-0.5 rounded-xl bg-teal-50 text-teal-700 border border-teal-200';
+      } else {
+        statusEl.textContent = 'لم يتم التسجيل 📝';
+        statusEl.className = 'text-xs font-bold px-2.5 py-0.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200';
+      }
+    }
+
+    function selectDate(date) {
+      state.selectedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      document.getElementById('selectedDateLabel').textContent = formatDate(state.selectedDate);
+      fillForm(state.records[dateKey(state.selectedDate)] || {});
+      renderCalendar();
+    }
+
+    function updateOtherDifficultyVisibility() {
+      const otherCheckbox = document.querySelector('input[name="difficulty"][value="سبب آخر"]');
+      const wrap = document.getElementById('otherDifficultyWrap');
+      wrap.classList.toggle('hidden', !otherCheckbox.checked);
+
+      const noneCheckbox = document.querySelector('input[name="difficulty"][value="لم أواجه صعوبات"]');
+      if (noneCheckbox && noneCheckbox.checked) {
+        document.querySelectorAll('input[name="difficulty"]').forEach(el => {
+          if (el !== noneCheckbox) el.checked = false;
+        });
+        wrap.classList.add('hidden');
+      }
+    }
+
+    document.querySelectorAll('input[name="difficulty"]').forEach(el => {
+      el.addEventListener('change', updateOtherDifficultyVisibility);
+    });
+
+    document.getElementById('saveDayBtn').addEventListener('click', () => {
+      const key = dateKey(state.selectedDate);
+      const formData = getFormData();
+      
+      state.records[key] = formData;
+      saveToLocalStorage();
+      renderCalendar();
+      
+      const statusEl = document.getElementById('saveStatus');
+      statusEl.textContent = 'تم الحفظ بنجاح ✓';
+      statusEl.className = 'text-xs font-bold px-2.5 py-0.5 rounded-xl bg-[#FBEAF3] text-[#762454] border border-[#C93A8C]/30';
+      
+      setTimeout(() => {
+        statusEl.textContent = 'تم الحفظ ✓';
+        statusEl.className = 'text-xs font-bold px-2.5 py-0.5 rounded-xl bg-teal-50 text-teal-700 border border-teal-200';
+      }, 2000);
+
+      sendRecordToServer(key, formData);
+    });
+
+    document.getElementById('prepareReportBtn').addEventListener('click', () => {
+      const d = getFormData();
+      document.getElementById('cardDateSubtitle').textContent = formatDate(state.selectedDate);
+      document.getElementById('cardPatientName').textContent = currentPatientName;
+
+      const badgesGrid = document.getElementById('dailyVisualBadges');
+      badgesGrid.innerHTML = `
+        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <span class="text-[9px] text-slate-400 font-bold">💧 المياه</span>
+          <span class="text-xs font-black text-[#107EAF] mt-0.5">${d.water || 'لم يسجل'}</span>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <span class="text-[9px] text-slate-400 font-bold">🏃 النشاط</span>
+          <span class="text-xs font-black text-[#C93A8C] mt-0.5">${d.activity || 'لم يسجل'}</span>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <span class="text-[9px] text-slate-400 font-bold">🍽️ الوجبات</span>
+          <span class="text-xs font-black text-slate-700 mt-0.5">${d.meals || 'لم يسجل'}</span>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <span class="text-[9px] text-slate-400 font-bold">🥚 البروتين</span>
+          <span class="text-xs font-black text-[#C93A8C] mt-0.5">${d.protein || 'لم يسجل'}</span>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <span class="text-[9px] text-slate-400 font-bold">🍫 الحلويات</span>
+          <span class="text-xs font-black text-amber-600 mt-0.5">${d.sweets || 'لم يسجل'}</span>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <span class="text-[9px] text-slate-400 font-bold">😴 النوم</span>
+          <span class="text-xs font-black text-[#107EAF] mt-0.5">${d.sleep || 'لم يسجل'}</span>
+        </div>
+      `;
+
+      let diffDisplayStr = '';
+      if (d.difficulty && d.difficulty.length > 0) {
+        let listWithoutOther = d.difficulty.filter(item => item !== 'سبب آخر');
+        let parts = [...listWithoutOther];
+        if (d.difficulty.includes('سبب آخر') && d.otherDifficulty) {
+          parts.push(`سبب آخر: ${d.otherDifficulty}`);
+        } else if (d.difficulty.includes('سبب آخر')) {
+          parts.push('سبب آخر');
+        }
+        diffDisplayStr = parts.join('، ');
+      }
+
+      const diffWrap = document.getElementById('dailyCardDifficultyWrap');
+      const diffText = document.getElementById('dailyCardDifficultyText');
+      if (diffWrap && diffText) {
+        if (diffDisplayStr) {
+          diffText.textContent = diffDisplayStr;
+          diffWrap.classList.remove('hidden');
+        } else {
+          diffWrap.classList.add('hidden');
+        }
+      }
+
+      const notesWrap = document.getElementById('dailyCardNotesWrap');
+      const notesText = document.getElementById('dailyCardNotesText');
+      if (d.dailyNotes) {
+        notesWrap.classList.remove('hidden');
+        notesText.textContent = d.dailyNotes;
+      } else {
+        notesWrap.classList.add('hidden');
+      }
+
+      const reportBox = document.getElementById('reportBox');
+      reportBox.classList.remove('hidden');
+      reportBox.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const result = [];
+      const paragraphs = String(text ?? '').split(/\r?\n/);
+      for (const paragraph of paragraphs) {
+        const words = paragraph.split(/\s+/).filter(Boolean);
+        if (!words.length) { result.push(''); continue; }
+        let line = '';
+        for (const word of words) {
+          let chunks = [word];
+          if (ctx.measureText(word).width > maxWidth) {
+            chunks = []; let chunk = '';
+            for (const char of word) {
+              if (chunk && ctx.measureText(chunk + char).width > maxWidth) { chunks.push(chunk); chunk = char; }
+              else chunk += char;
+            }
+            if (chunk) chunks.push(chunk);
+          }
+          for (const chunk of chunks) {
+            const candidate = line ? `${line} ${chunk}` : chunk;
+            if (line && ctx.measureText(candidate).width > maxWidth) { result.push(line); line = chunk; }
+            else line = candidate;
+          }
+        }
+        result.push(line);
+      }
+      return result.length ? result : [''];
+    }
+
+    async function captureDailyCardCanvas() {
+      const d = getFormData();
+      const dateText = document.getElementById('cardDateSubtitle').textContent;
+      
+      let diffCanvasText = '';
+      if (d.difficulty && d.difficulty.length > 0) {
+        let listWithoutOther = d.difficulty.filter(item => item !== 'سبب آخر');
+        let parts = [...listWithoutOther];
+        if (d.difficulty.includes('سبب آخر') && d.otherDifficulty) {
+          parts.push(`سبب آخر: ${d.otherDifficulty}`);
+        } else if (d.difficulty.includes('سبب آخر')) {
+          parts.push('سبب آخر');
+        }
+        diffCanvasText = parts.join('، ');
+      }
+      const hasDifficulty = diffCanvasText !== '';
+
+      const notesText = d.dailyNotes || '';
+      const hasNotes = notesText.trim() !== '';
+      const textMeasureCanvas = document.createElement('canvas');
+      const textMeasureCtx = textMeasureCanvas.getContext('2d');
+      textMeasureCtx.font = '400 9px "Tajawal", sans-serif';
+      const diffLines = hasDifficulty ? wrapCanvasText(textMeasureCtx, diffCanvasText, 350) : [];
+      const notesLines = hasNotes ? wrapCanvasText(textMeasureCtx, notesText, 350) : [];
+
+      const canvas = document.createElement('canvas');
+      const width = 420; 
+      let baseHeight = 242;
+      if (hasDifficulty) baseHeight += Math.max(38, 27 + diffLines.length * 12);
+      if (hasNotes) baseHeight += Math.max(38, 28 + notesLines.length * 12);
+      const height = baseHeight;
+      
+      canvas.width = width * 2;
+      canvas.height = height * 2;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.scale(2, 2);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#F0D4E4';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(8, 8, width - 16, height - 16, 14);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.direction = 'rtl';
+
+      const iconW = 26; 
+      const iconH = 26; 
+      const iconX = width - 42 - (iconW / 2);
+      const iconY = 34 - (iconH / 2);
+      
+      const grad = ctx.createLinearGradient(iconX, iconY, iconX + iconW, iconY + iconH);
+      grad.addColorStop(0, '#C93A8C');
+      grad.addColorStop(1, '#107EAF');
+      
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(iconX, iconY, iconW, iconH, 8);
+      ctx.fill();
+
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🌿', iconX + (iconW / 2), iconY + (iconH / 2) + 1);
+
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'alphabetic';
+
+      ctx.fillStyle = '#762454';
+      ctx.font = '900 12px "Tajawal", sans-serif';
+      ctx.fillText('بطاقة إنجاز اليوم', width - 72, 30);
+
+      ctx.fillStyle = '#107EAF';
+      ctx.font = '700 10px "Tajawal", sans-serif';
+      ctx.fillText(dateText, width - 72, 45);
+
+      ctx.save();
+      ctx.font = '800 8.5px "Tajawal", sans-serif';
+      const patientBadgeText = currentPatientName;
+      const textWidth = ctx.measureText(patientBadgeText).width;
+      const badgeX = 22;
+      const badgeY = 22;
+      const badgeW = textWidth + 16;
+      const badgeH = 24;
+
+      ctx.fillStyle = '#FFF5F9';
+      ctx.strokeStyle = '#FAD2E1';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#C93A8C';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(patientBadgeText, badgeX + (badgeW / 2), badgeY + (badgeH / 2) + 1);
+      ctx.restore();
+
+      ctx.strokeStyle = '#FBEAF3';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(22, 58);
+      ctx.lineTo(width - 22, 58);
+      ctx.stroke();
+
+      const items = [
+        { label: '💧 المياه', val: d.water || 'لم يسجل', color: '#107EAF' },
+        { label: '🏃 النشاط', val: d.activity || 'لم يسجل', color: '#C93A8C' },
+        { label: '🍽️ الوجبات', val: d.meals || 'لم يسجل', color: '#30253A' },
+        { label: '🥚 البروتين', val: d.protein || 'لم يسجل', color: '#C93A8C' },
+        { label: '🍫 الحلويات', val: d.sweets || 'لم يسجل', color: '#D97706' },
+        { label: '😴 النوم', val: d.sleep || 'لم يسجل', color: '#107EAF' }
+      ];
+
+      let startX = width - 22;
+      let startY = 70;
+      let boxWidth = 118;
+      let boxHeight = 46;
+      let gapX = 10;
+      let gapY = 8;
+
+      items.forEach((item, index) => {
+        let col = index % 3;
+        let row = Math.floor(index / 3);
+        let x = startX - boxWidth - (col * (boxWidth + gapX));
+        let y = startY + row * (boxHeight + gapY);
+
+        ctx.fillStyle = '#FAFAFC';
+        ctx.strokeStyle = '#E2E8F0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(x, y, boxWidth, boxHeight, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '700 8.5px "Tajawal", sans-serif';
+        ctx.fillText(item.label, x + boxWidth - 10, y + 16);
+
+        ctx.fillStyle = item.color;
+        ctx.font = '900 10.5px "Tajawal", sans-serif';
+        ctx.fillText(item.val, x + boxWidth - 10, y + 32);
+      });
+
+      let currentYOffset = startY + (2 * (boxHeight + gapY)) + 6;
+
+      if (hasDifficulty) {
+        ctx.fillStyle = '#FFFBFA';
+        ctx.strokeStyle = '#FEE2E2';
+        ctx.beginPath();
+        const difficultyBoxHeight = Math.max(32, 22 + diffLines.length * 12);
+        ctx.roundRect(22, currentYOffset, width - 44, difficultyBoxHeight, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#DC2626';
+        ctx.font = '700 9px "Tajawal", sans-serif';
+        ctx.fillText('⚠️ الصعوبات:', width - 32, currentYOffset + 14);
+
+        ctx.fillStyle = '#334155';
+        ctx.font = '400 9px "Tajawal", sans-serif';
+        diffLines.forEach((line, lineIndex) => ctx.fillText(line, width - 32, currentYOffset + 25 + lineIndex * 12));
+
+        currentYOffset += difficultyBoxHeight + 6;
+      }
+
+      if (hasNotes) {
+        let notesBoxHeight = Math.max(38, 28 + notesLines.length * 12);
+        ctx.fillStyle = '#FAFAFC';
+        ctx.strokeStyle = '#CBD5E1';
+        ctx.beginPath();
+        ctx.roundRect(22, currentYOffset, width - 44, notesBoxHeight, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#762454';
+        ctx.font = '700 9px "Tajawal", sans-serif';
+        ctx.fillText('📝 ملاحظاتك:', width - 32, currentYOffset + 15);
+
+        ctx.fillStyle = '#334155';
+        ctx.font = '400 9px "Tajawal", sans-serif';
+        notesLines.forEach((line, lineIndex) => {
+          let lineY = currentYOffset + 27 + (lineIndex * 12);
+          ctx.fillText(line, width - 32, lineY);
+        });
+      }
+
+      return canvas;
+    }
+
+    document.getElementById('downloadDailyImageBtn').addEventListener('click', async () => {
+      document.getElementById('shareNote').textContent = 'جاري تصدير الصورة...';
+      try {
+        const canvas = await captureDailyCardCanvas();
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        const year = state.selectedDate.getFullYear();
+        const month = String(state.selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(state.selectedDate.getDate()).padStart(2, '0');
+        link.download = `تقرير-${currentPatientName}-${year}-${month}-${day}.png`;
+        link.click();
+        document.getElementById('shareNote').textContent = 'تم تحميل الصورة بنجاح! ✓';
+      } catch (err) {
+        document.getElementById('shareNote').textContent = 'تعذر تصدير الصورة.';
+      }
+    });
+
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      document.getElementById('shareNote').textContent = 'جاري تجهيز الصورة للمشاركة...';
+      try {
+        const canvas = await captureDailyCardCanvas();
+        const year = state.selectedDate.getFullYear();
+        const month = String(state.selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(state.selectedDate.getDate()).padStart(2, '0');
+        const fileName = `تقرير-${currentPatientName}-${year}-${month}-${day}.png`;
+
+        const blob = await new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('تعذر إنشاء الصورة')), 'image/png'));
+        const file = new File([blob], fileName, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'متابعتي اليومية', text: `إليك تقرير المتابعة الخاص بـ ${currentPatientName} 💚` });
+          document.getElementById('shareNote').textContent = 'تمت المشاركة بنجاح! ✓';
+        } else {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = fileName;
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+          document.getElementById('shareNote').textContent = 'تم حفظ الصورة، يمكنك مشاركتها.';
+        }
+      } catch (err) {
+        document.getElementById('shareNote').textContent = 'تعذرت المشاركة المباشرة.';
+      }
+    });
+
+    document.getElementById('openJournalBookBtn').addEventListener('click', () => {
+      const savedKeys = Object.keys(state.records).sort();
+      document.getElementById('bookTitleRange').textContent = `سجل المتابعة لـ ${currentPatientName} (${savedKeys.length} يوم)`;
+
+      let totalLoggedDays = savedKeys.length;
+      let totalWaterML = 0;
+      const container = document.getElementById('bookPagesContainer');
+      container.innerHTML = '';
+
+      if (savedKeys.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-400 text-xs font-bold">
+            لم تقومي بتسجيل أي أيام حتى الآن. ابدئي بحفظ بيانات أي يوم! 💚
+          </div>
+        `;
+      } else {
+        savedKeys.forEach((key) => {
+          const rec = state.records[key];
+          const parts = key.split('-');
+          const date = new Date(parts[0], parts[1] - 1, parts[2]);
+          
+          if (rec.water) {
+            const ml = parseInt(rec.water);
+            if (!isNaN(ml)) totalWaterML += ml;
+          }
+
+          const dayName = weekdays[date.getDay()];
+          const pageCard = document.createElement('div');
+          pageCard.className = `p-3.5 rounded-xl border bg-white border-[#C93A8C]/30 shadow-xs space-y-2`;
+
+          pageCard.innerHTML = `
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg brand-gradient text-white text-[11px] font-bold flex items-center justify-center">${date.getDate()}</span>
+                <span class="font-black text-[#762454] text-xs">${dayName} (${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()})</span>
+              </div>
+              <span class="text-[9px] bg-[#FBEAF3] text-[#762454] px-2 py-0.5 rounded font-extrabold">مكتمل ✓</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px]">
+              <div class="bg-[#FAFAFC] p-2 rounded-lg border border-slate-100"><span class="text-slate-400 block text-[9px]">💧 المياه</span><strong class="text-[#107EAF]">${rec.water || '-'}</strong></div>
+              <div class="bg-[#FAFAFC] p-2 rounded-lg border border-slate-100"><span class="text-slate-400 block text-[9px]">🏃 النشاط</span><strong class="text-[#C93A8C]">${rec.activity || '-'}</strong></div>
+              <div class="bg-[#FAFAFC] p-2 rounded-lg border border-slate-100"><span class="text-slate-400 block text-[9px]">🍽️ الوجبات</span><strong>${rec.meals || '-'}</strong></div>
+              <div class="bg-[#FAFAFC] p-2 rounded-lg border border-slate-100"><span class="text-slate-400 block text-[9px]">🥚 البروتين</span><strong>${rec.protein || '-'}</strong></div>
+              <div class="bg-[#FAFAFC] p-2 rounded-lg border border-slate-100"><span class="text-slate-400 block text-[9px]">🍫 الحلويات</span><strong class="text-amber-600">${rec.sweets || '-'}</strong></div>
+              <div class="bg-[#FAFAFC] p-2 rounded-lg border border-slate-100"><span class="text-slate-400 block text-[9px]">😴 النوم</span><strong class="text-[#107EAF]">${rec.sleep || '-'}</strong></div>
+            </div>
+            ${rec.difficulty && rec.difficulty.length > 0 ? `<div class="text-[10px] bg-amber-50/60 p-2 rounded-lg border border-amber-200 text-amber-800"><strong>🧩 الصعوبات:</strong> ${rec.difficulty.join('، ')} ${rec.otherDifficulty ? '(' + rec.otherDifficulty + ')' : ''}</div>` : ''}
+            ${rec.dailyNotes ? `<div class="text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-200 text-slate-700 italic"><strong>📝 ملاحظات:</strong> ${rec.dailyNotes}</div>` : ''}
+          `;
+
+          container.appendChild(pageCard);
+        });
+      }
+
+      document.getElementById('bookStatDays').textContent = `${totalLoggedDays} يوم`;
+      document.getElementById('bookStatWater').textContent = `${totalWaterML.toLocaleString()} مل`;
+      document.getElementById('bookStatScore').textContent = totalLoggedDays > 0 ? 'نشط 🌟' : '0%';
+
+      document.getElementById('journalModal').classList.remove('hidden');
+    });
+
+    document.getElementById('closeJournalModal').addEventListener('click', () => {
+      document.getElementById('journalModal').classList.add('hidden');
+    });
+
+    async function generateWeeklyCanvas() {
+      const savedKeys = Object.keys(state.records).sort();
+      if (savedKeys.length === 0) return null;
+
+      const width = 420;
+      let totalHeight = 95;
+      
+      const processedDays = savedKeys.map(key => {
+        const rec = state.records[key];
+        const parts = key.split('-');
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+        const dayName = weekdays[date.getDay()];
+        const dateStr = `${dayName} (${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()})`;
+
+        let diffCanvasText = '';
+        if (rec.difficulty && rec.difficulty.length > 0) {
+          let listWithoutOther = rec.difficulty.filter(item => item !== 'سبب آخر');
+          let partsList = [...listWithoutOther];
+          if (rec.difficulty.includes('سبب آخر') && rec.otherDifficulty) {
+            partsList.push(`سبب آخر: ${rec.otherDifficulty}`);
+          } else if (rec.difficulty.includes('سبب آخر')) {
+            partsList.push('سبب آخر');
+          }
+          diffCanvasText = partsList.join('، ');
+        }
+        const hasDiff = diffCanvasText !== '';
+
+        const notesText = rec.dailyNotes || '';
+        const hasNotes = notesText.trim() !== '';
+        const ctxTemp = document.createElement('canvas').getContext('2d');
+        ctxTemp.font = '400 9px "Tajawal", sans-serif';
+        const diffLines = hasDiff ? wrapCanvasText(ctxTemp, diffCanvasText, 340) : [];
+        const notesLines = hasNotes ? wrapCanvasText(ctxTemp, notesText, 340) : [];
+
+        let cardH = 175;
+        if (hasDiff) cardH += Math.max(38, 27 + diffLines.length * 11);
+        if (hasNotes) cardH += Math.max(38, 28 + notesLines.length * 11);
+
+        totalHeight += cardH + 15;
+        return { rec, dateStr, diffCanvasText, hasDiff, diffLines, hasNotes, notesLines, cardH };
+      });
+
+      totalHeight += 20;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width * 2;
+      canvas.height = totalHeight * 2;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(2, 2);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, width, totalHeight);
+      ctx.direction = 'rtl';
+
+      ctx.fillStyle = '#762454';
+      ctx.font = '900 15px "Tajawal", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🌟 تقرير المتابعة الأسبوعي 🌟', width / 2, 30);
+
+      const nameText = `اسم الحالة: ${currentPatientName || 'مريض'}`;
+      const separatorText = '   |   ';
+      const daysText = `إجمالي الأيام: ${savedKeys.length} أيام`;
+
+      ctx.font = '800 11px "Tajawal", sans-serif';
+      const totalTextWidth = ctx.measureText(nameText + separatorText + daysText).width;
+      let startXCoord = (width / 2) + (totalTextWidth / 2);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#C93A8C';
+      ctx.fillText(nameText, startXCoord, 54);
+      startXCoord -= ctx.measureText(nameText).width;
+
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText(separatorText, startXCoord, 54);
+      startXCoord -= ctx.measureText(separatorText).width;
+
+      ctx.fillStyle = '#107EAF';
+      ctx.fillText(daysText, startXCoord, 54);
+
+      ctx.strokeStyle = '#FBEAF3';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(22, 68);
+      ctx.lineTo(width - 22, 68);
+      ctx.stroke();
+
+      let currentY = 82;
+
+      processedDays.forEach((dayData) => {
+        const { rec, dateStr, diffCanvasText, hasDiff, diffLines, hasNotes, notesLines, cardH } = dayData;
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#F0D4E4';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(15, currentY, width - 30, cardH, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        const iconW = 24; 
+        const iconH = 24; 
+        const iconX = width - 35 - (iconW / 2);
+        const iconY = currentY + 26 - (iconH / 2);
+        
+        const grad = ctx.createLinearGradient(iconX, iconY, iconX + iconW, iconY + iconH);
+        grad.addColorStop(0, '#C93A8C');
+        grad.addColorStop(1, '#107EAF');
+        
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(iconX, iconY, iconW, iconH, 7);
+        ctx.fill();
+
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🌿', iconX + (iconW / 2), iconY + (iconH / 2) + 1);
+
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'alphabetic';
+
+        ctx.fillStyle = '#762454';
+        ctx.font = '900 11px "Tajawal", sans-serif';
+        ctx.fillText('بطاقة إنجاز اليوم', width - 62, currentY + 22);
+
+        ctx.fillStyle = '#107EAF';
+        ctx.font = '700 9.5px "Tajawal", sans-serif';
+        ctx.fillText(dateStr, width - 62, currentY + 36);
+
+        ctx.save();
+        ctx.font = '800 8px "Tajawal", sans-serif';
+        const badgeText = 'مكتمل ✓';
+        const badgeX = 25;
+        const badgeY = currentY + 14;
+        const badgeW = 60;
+        const badgeH = 22;
+
+        ctx.fillStyle = '#FFF5F9';
+        ctx.strokeStyle = '#FAD2E1';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 11);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#C93A8C';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(badgeText, badgeX + (badgeW / 2), badgeY + (badgeH / 2) + 1);
+        ctx.restore();
+
+        ctx.strokeStyle = '#FBEAF3';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(25, currentY + 48);
+        ctx.lineTo(width - 25, currentY + 48);
+        ctx.stroke();
+
+        const items = [
+          { label: '💧 المياه', val: rec.water || 'لم يسجل', color: '#107EAF' },
+          { label: '🏃 النشاط', val: rec.activity || 'لم يسجل', color: '#C93A8C' },
+          { label: '🍽️ الوجبات', val: rec.meals || 'لم يسجل', color: '#30253A' },
+          { label: '🥚 البروتين', val: rec.protein || 'لم يسجل', color: '#C93A8C' },
+          { label: '🍫 الحلويات', val: rec.sweets || 'لم يسجل', color: '#D97706' },
+          { label: '😴 النوم', val: rec.sleep || 'لم يسجل', color: '#107EAF' }
+        ];
+
+        let startX = width - 25;
+        let startYBox = currentY + 58;
+        let boxWidth = 116;
+        let boxHeight = 44;
+        let gapX = 8;
+        let gapY = 6;
+
+        items.forEach((item, index) => {
+          let col = index % 3;
+          let row = Math.floor(index / 3);
+          let x = startX - boxWidth - (col * (boxWidth + gapX));
+          let y = startYBox + row * (boxHeight + gapY);
+
+          ctx.fillStyle = '#FAFAFC';
+          ctx.strokeStyle = '#E2E8F0';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(x, y, boxWidth, boxHeight, 8);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.textAlign = 'right';
+          ctx.fillStyle = '#94A3B8';
+          ctx.font = '700 8px "Tajawal", sans-serif';
+          ctx.fillText(item.label, x + boxWidth - 8, y + 15);
+
+          ctx.fillStyle = item.color;
+          ctx.font = '900 10px "Tajawal", sans-serif';
+          ctx.fillText(item.val, x + boxWidth - 8, y + 30);
+        });
+
+        let innerOffset = startYBox + (2 * (boxHeight + gapY)) + 4;
+
+        if (hasDiff) {
+          ctx.fillStyle = '#FFFBFA';
+          ctx.strokeStyle = '#FEE2E2';
+          ctx.beginPath();
+          const diffBoxH = Math.max(30, 21 + diffLines.length * 11);
+          ctx.roundRect(25, innerOffset, width - 50, diffBoxH, 8);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.textAlign = 'right';
+          ctx.fillStyle = '#DC2626';
+          ctx.font = '700 8.5px "Tajawal", sans-serif';
+          ctx.fillText('⚠️ الصعوبات:', width - 35, innerOffset + 13);
+
+          ctx.fillStyle = '#334155';
+          ctx.font = '400 8.5px "Tajawal", sans-serif';
+          diffLines.forEach((line, lineIndex) => ctx.fillText(line, width - 35, innerOffset + 23 + lineIndex * 11));
+
+          innerOffset += diffBoxH + 6;
+        }
+
+        if (hasNotes) {
+          let notesBoxH = Math.max(34, 24 + notesLines.length * 11);
+          ctx.fillStyle = '#FAFAFC';
+          ctx.strokeStyle = '#CBD5E1';
+          ctx.beginPath();
+          ctx.roundRect(25, innerOffset, width - 50, notesBoxH, 8);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.textAlign = 'right';
+          ctx.fillStyle = '#762454';
+          ctx.font = '700 8.5px "Tajawal", sans-serif';
+          ctx.fillText('📝 ملاحظاتك:', width - 35, innerOffset + 13);
+
+          ctx.fillStyle = '#334155';
+          ctx.font = '400 8.5px "Tajawal", sans-serif';
+          notesLines.forEach((line, lineIndex) => {
+            let lineY = innerOffset + 24 + (lineIndex * 11);
+            ctx.fillText(line, width - 35, lineY);
+          });
+        }
+
+        currentY += cardH + 15;
+      });
+
+      return canvas;
+    }
+
+    document.getElementById('downloadBookImageBtn').addEventListener('click', async () => {
+      document.getElementById('bookShareNote').textContent = 'جاري تصدير السجل كصورة...';
+      try {
+        const canvas = await generateWeeklyCanvas();
+        if (!canvas) {
+          document.getElementById('bookShareNote').textContent = 'لا توجد أيام مسجلة للتصدير.';
+          return;
+        }
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'سجل-المتابعة-الأسبوعي.png';
+        link.click();
+        document.getElementById('bookShareNote').textContent = 'تم تحميل السجل كصورة بنجاح! ✓';
+      } catch (err) {
+        document.getElementById('bookShareNote').textContent = 'تعذر تصدير الصورة.';
+      }
+    });
+
+    document.getElementById('shareBookBtn').addEventListener('click', async () => {
+      document.getElementById('bookShareNote').textContent = 'جاري تجهيز الصورة للمشاركة...';
+      try {
+        const canvas = await generateWeeklyCanvas();
+        if (!canvas) {
+          document.getElementById('bookShareNote').textContent = 'لا توجد أيام مسجلة للمشاركة.';
+          return;
+        }
+
+        const blob = await new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('تعذر إنشاء الصورة')), 'image/png'));
+        const file = new File([blob], 'سجل-المتابعة-الأسبوعي.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'سجل المتابعة الأسبوعي', text: 'إليك سجل المتابعة الخاص بي 💚' });
+          document.getElementById('bookShareNote').textContent = 'تمت المشاركة بنجاح! ✓';
+        } else {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'سجل-المتابعة-الأسبوعي.png';
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+          document.getElementById('bookShareNote').textContent = 'تم حفظ الصورة، يمكنك مشاركتها يدوياً.';
+        }
+      } catch (err) {
+        document.getElementById('bookShareNote').textContent = 'تعذرت المشاركة المباشرة.';
+      }
+    });
+
+    document.getElementById('prevDays').addEventListener('click', () => {
+      state.viewAnchorDate.setDate(state.viewAnchorDate.getDate() - 7);
+      renderCalendar();
+    });
+
+    document.getElementById('nextDays').addEventListener('click', () => {
+      state.viewAnchorDate.setDate(state.viewAnchorDate.getDate() + 7);
+      renderCalendar();
+    });
+
+    function initApp() {
+      state.viewAnchorDate = new Date(today);
+      state.viewAnchorDate.setDate(today.getDate() - 3);
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
