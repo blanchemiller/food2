@@ -1310,11 +1310,13 @@
       totalHeight += 20;
 
       const canvas = document.createElement('canvas');
-      canvas.width = width * 2;
-      canvas.height = totalHeight * 2;
+      // رفع الدقة إلى الضعف (Scale 3) لضمان جودة فائقة عند المشاركة والتحميل
+      const scaleFactor = 3;
+      canvas.width = width * scaleFactor;
+      canvas.height = totalHeight * scaleFactor;
 
       const ctx = canvas.getContext('2d');
-      ctx.scale(2, 2);
+      ctx.scale(scaleFactor, scaleFactor);
 
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, width, totalHeight);
