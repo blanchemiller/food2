@@ -1269,9 +1269,8 @@
       const savedKeys = Object.keys(state.records).sort();
       if (savedKeys.length === 0) return null;
 
-      // العرض الأساسي 840 صريح ومباشر لضمان أعلى دقة وضوح (High-Res)
-      const width = 840;
-      let totalHeight = 190;
+      const width = 420;
+      let totalHeight = 95;
       
       const processedDays = savedKeys.map(key => {
         const rec = state.records[key];
@@ -1295,83 +1294,82 @@
 
         const notesText = rec.dailyNotes || '';
         const hasNotes = notesText.trim() !== '';
-        
-        // استخدام عنصر مؤقت مستقل تماماً لدقة قياس السطور
-        const tempCanvas = document.createElement('canvas');
-        const ctxTemp = tempCanvas.getContext('2d');
-        ctxTemp.font = '400 18px "Tajawal", sans-serif';
-        const diffLines = hasDiff ? wrapCanvasText(ctxTemp, diffCanvasText, 720) : [];
-        const notesLines = hasNotes ? wrapCanvasText(ctxTemp, notesText, 720) : [];
+        const ctxTemp = document.createElement('canvas').getContext('2d');
+        ctxTemp.font = '400 9px "Tajawal", sans-serif';
+        const diffLines = hasDiff ? wrapCanvasText(ctxTemp, diffCanvasText, 340) : [];
+        const notesLines = hasNotes ? wrapCanvasText(ctxTemp, notesText, 340) : [];
 
-        let cardH = 350;
-        if (hasDiff) cardH += Math.max(76, 54 + diffLines.length * 22);
-        if (hasNotes) cardH += Math.max(76, 56 + notesLines.length * 22);
+        let cardH = 175;
+        if (hasDiff) cardH += Math.max(38, 27 + diffLines.length * 11);
+        if (hasNotes) cardH += Math.max(38, 28 + notesLines.length * 11);
 
-        totalHeight += cardH + 30;
+        totalHeight += cardH + 15;
         return { rec, dateStr, diffCanvasText, hasDiff, diffLines, hasNotes, notesLines, cardH };
       });
 
-      totalHeight += 40;
+      totalHeight += 20;
 
-      // إنشاء الكانفاس بالأبعاد الكاملة 840
       const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = totalHeight;
+      const scaleFactor = 2; // المقاس الأصلي المظبوط اللي كان بيطلع التحميل 840x2966
+      canvas.width = width * scaleFactor;
+      canvas.height = totalHeight * scaleFactor;
 
       const ctx = canvas.getContext('2d');
+      ctx.scale(scaleFactor, scaleFactor);
+
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, width, totalHeight);
       ctx.direction = 'rtl';
 
       ctx.fillStyle = '#762454';
-      ctx.font = '900 30px "Tajawal", sans-serif';
+      ctx.font = '900 15px "Tajawal", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🌟 تقرير المتابعة الأسبوعي 🌟', width / 2, 55);
+      ctx.fillText('🌟 تقرير المتابعة الأسبوعي 🌟', width / 2, 30);
 
       const nameText = `اسم الحالة: ${currentPatientName || 'مريض'}`;
       const separatorText = '   |   ';
       const daysText = `إجمالي الأيام: ${savedKeys.length} أيام`;
 
-      ctx.font = '800 22px "Tajawal", sans-serif';
+      ctx.font = '800 11px "Tajawal", sans-serif';
       const totalTextWidth = ctx.measureText(nameText + separatorText + daysText).width;
       let startXCoord = (width / 2) + (totalTextWidth / 2);
 
       ctx.textAlign = 'right';
       ctx.fillStyle = '#C93A8C';
-      ctx.fillText(nameText, startXCoord, 105);
+      ctx.fillText(nameText, startXCoord, 54);
       startXCoord -= ctx.measureText(nameText).width;
 
       ctx.fillStyle = '#94A3B8';
-      ctx.fillText(separatorText, startXCoord, 105);
+      ctx.fillText(separatorText, startXCoord, 54);
       startXCoord -= ctx.measureText(separatorText).width;
 
       ctx.fillStyle = '#107EAF';
-      ctx.fillText(daysText, startXCoord, 105);
+      ctx.fillText(daysText, startXCoord, 54);
 
       ctx.strokeStyle = '#FBEAF3';
-      ctx.lineWidth = 2.4;
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.moveTo(44, 135);
-      ctx.lineTo(width - 44, 135);
+      ctx.moveTo(22, 68);
+      ctx.lineTo(width - 22, 68);
       ctx.stroke();
 
-      let currentY = 160;
+      let currentY = 82;
 
       processedDays.forEach((dayData) => {
         const { rec, dateStr, diffCanvasText, hasDiff, diffLines, hasNotes, notesLines, cardH } = dayData;
 
         ctx.fillStyle = '#FFFFFF';
         ctx.strokeStyle = '#F0D4E4';
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.roundRect(30, currentY, width - 60, cardH, 22);
+        ctx.roundRect(15, currentY, width - 30, cardH, 12);
         ctx.fill();
         ctx.stroke();
 
-        const iconW = 48; 
-        const iconH = 48; 
-        const iconX = width - 70 - (iconW / 2);
-        const iconY = currentY + 52 - (iconH / 2);
+        const iconW = 24; 
+        const iconH = 24; 
+        const iconX = width - 35 - (iconW / 2);
+        const iconY = currentY + 26 - (iconH / 2);
         
         const grad = ctx.createLinearGradient(iconX, iconY, iconX + iconW, iconY + iconH);
         grad.addColorStop(0, '#C93A8C');
@@ -1379,52 +1377,52 @@
         
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.roundRect(iconX, iconY, iconW, iconH, 14);
+        ctx.roundRect(iconX, iconY, iconW, iconH, 7);
         ctx.fill();
 
-        ctx.font = '20px sans-serif';
+        ctx.font = '10px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('🌿', iconX + (iconW / 2), iconY + (iconH / 2) + 2);
+        ctx.fillText('🌿', iconX + (iconW / 2), iconY + (iconH / 2) + 1);
 
         ctx.textAlign = 'right';
         ctx.textBaseline = 'alphabetic';
 
         ctx.fillStyle = '#762454';
-        ctx.font = '900 22px "Tajawal", sans-serif';
-        ctx.fillText('بطاقة إنجاز اليوم', width - 124, currentY + 44);
+        ctx.font = '900 11px "Tajawal", sans-serif';
+        ctx.fillText('بطاقة إنجاز اليوم', width - 62, currentY + 22);
 
         ctx.fillStyle = '#107EAF';
-        ctx.font = '700 19px "Tajawal", sans-serif';
-        ctx.fillText(dateStr, width - 124, currentY + 72);
+        ctx.font = '700 9.5px "Tajawal", sans-serif';
+        ctx.fillText(dateStr, width - 62, currentY + 36);
 
         ctx.save();
-        ctx.font = '800 16px "Tajawal", sans-serif';
+        ctx.font = '800 8px "Tajawal", sans-serif';
         const badgeText = 'مكتمل ✓';
-        const badgeX = 50;
-        const badgeY = currentY + 28;
-        const badgeW = 120;
-        const badgeH = 44;
+        const badgeX = 25;
+        const badgeY = currentY + 14;
+        const badgeW = 60;
+        const badgeH = 22;
 
         ctx.fillStyle = '#FFF5F9';
         ctx.strokeStyle = '#FAD2E1';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 22);
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 11);
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#C93A8C';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(badgeText, badgeX + (badgeW / 2), badgeY + (badgeH / 2) + 2);
+        ctx.fillText(badgeText, badgeX + (badgeW / 2), badgeY + (badgeH / 2) + 1);
         ctx.restore();
 
         ctx.strokeStyle = '#FBEAF3';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(50, currentY + 96);
-        ctx.lineTo(width - 50, currentY + 96);
+        ctx.moveTo(25, currentY + 48);
+        ctx.lineTo(width - 25, currentY + 48);
         ctx.stroke();
 
         const items = [
@@ -1436,12 +1434,12 @@
           { label: '😴 النوم', val: rec.sleep || 'لم يسجل', color: '#107EAF' }
         ];
 
-        let startX = width - 50;
-        let startYBox = currentY + 116;
-        let boxWidth = 232;
-        let boxHeight = 88;
-        let gapX = 16;
-        let gapY = 12;
+        let startX = width - 25;
+        let startYBox = currentY + 58;
+        let boxWidth = 116;
+        let boxHeight = 44;
+        let gapX = 8;
+        let gapY = 6;
 
         items.forEach((item, index) => {
           let col = index % 3;
@@ -1451,72 +1449,127 @@
 
           ctx.fillStyle = '#FAFAFC';
           ctx.strokeStyle = '#E2E8F0';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.roundRect(x, y, boxWidth, boxHeight, 16);
+          ctx.roundRect(x, y, boxWidth, boxHeight, 8);
           ctx.fill();
           ctx.stroke();
 
           ctx.textAlign = 'right';
           ctx.fillStyle = '#94A3B8';
-          ctx.font = '700 16px "Tajawal", sans-serif';
-          ctx.fillText(item.label, x + boxWidth - 16, y + 30);
+          ctx.font = '700 8px "Tajawal", sans-serif';
+          ctx.fillText(item.label, x + boxWidth - 8, y + 15);
 
           ctx.fillStyle = item.color;
-          ctx.font = '900 20px "Tajawal", sans-serif';
-          ctx.fillText(item.val, x + boxWidth - 16, y + 62);
+          ctx.font = '900 10px "Tajawal", sans-serif';
+          ctx.fillText(item.val, x + boxWidth - 8, y + 30);
         });
 
-        let innerOffset = startYBox + (2 * (boxHeight + gapY)) + 8;
+        let innerOffset = startYBox + (2 * (boxHeight + gapY)) + 4;
 
         if (hasDiff) {
           ctx.fillStyle = '#FFFBFA';
           ctx.strokeStyle = '#FEE2E2';
           ctx.beginPath();
-          const diffBoxH = Math.max(60, 42 + diffLines.length * 22);
-          ctx.roundRect(50, innerOffset, width - 100, diffBoxH, 16);
+          const diffBoxH = Math.max(30, 21 + diffLines.length * 11);
+          ctx.roundRect(25, innerOffset, width - 50, diffBoxH, 8);
           ctx.fill();
           ctx.stroke();
 
           ctx.textAlign = 'right';
           ctx.fillStyle = '#DC2626';
-          ctx.font = '700 17px "Tajawal", sans-serif';
-          ctx.fillText('⚠️ الصعوبات:', width - 70, innerOffset + 26);
+          ctx.font = '700 8.5px "Tajawal", sans-serif';
+          ctx.fillText('⚠️ الصعوبات:', width - 35, innerOffset + 13);
 
           ctx.fillStyle = '#334155';
-          ctx.font = '400 17px "Tajawal", sans-serif';
-          diffLines.forEach((line, lineIndex) => ctx.fillText(line, width - 70, innerOffset + 48 + lineIndex * 22));
+          ctx.font = '400 8.5px "Tajawal", sans-serif';
+          diffLines.forEach((line, lineIndex) => ctx.fillText(line, width - 35, innerOffset + 23 + lineIndex * 11));
 
-          innerOffset += diffBoxH + 12;
+          innerOffset += diffBoxH + 6;
         }
 
         if (hasNotes) {
-          let notesBoxH = Math.max(68, 48 + notesLines.length * 22);
+          let notesBoxH = Math.max(34, 24 + notesLines.length * 11);
           ctx.fillStyle = '#FAFAFC';
           ctx.strokeStyle = '#CBD5E1';
           ctx.beginPath();
-          ctx.roundRect(50, innerOffset, width - 100, notesBoxH, 16);
+          ctx.roundRect(25, innerOffset, width - 50, notesBoxH, 8);
           ctx.fill();
           ctx.stroke();
 
           ctx.textAlign = 'right';
           ctx.fillStyle = '#762454';
-          ctx.font = '700 17px "Tajawal", sans-serif';
-          ctx.fillText('📝 ملاحظاتك:', width - 70, innerOffset + 26);
+          ctx.font = '700 8.5px "Tajawal", sans-serif';
+          ctx.fillText('📝 ملاحظاتك:', width - 35, innerOffset + 13);
 
           ctx.fillStyle = '#334155';
-          ctx.font = '400 17px "Tajawal", sans-serif';
+          ctx.font = '400 8.5px "Tajawal", sans-serif';
           notesLines.forEach((line, lineIndex) => {
-            let lineY = innerOffset + 48 + (lineIndex * 22);
-            ctx.fillText(line, width - 70, lineY);
+            let lineY = innerOffset + 24 + (lineIndex * 11);
+            ctx.fillText(line, width - 35, lineY);
           });
         }
 
-        currentY += cardH + 30;
+        currentY += cardH + 15;
       });
 
       return canvas;
     }
+
+    // زر التحميل (بالتعديل الأخير ليعمل مع الـ Canvas الصحيح)
+    document.getElementById('downloadBookImageBtn').addEventListener('click', async () => {
+      document.getElementById('bookShareNote').textContent = 'جاري تصدير السجل كصورة...';
+      try {
+        const canvas = await generateWeeklyCanvas();
+        if (!canvas) {
+          document.getElementById('bookShareNote').textContent = 'لا توجد أيام مسجلة للتصدير.';
+          return;
+        }
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png', 1.0);
+        link.download = 'سجل-المتابعة-الأسبوعي.png';
+        link.click();
+        document.getElementById('bookShareNote').textContent = 'تم تحميل السجل كصورة بنجاح! ✓';
+      } catch (err) {
+        document.getElementById('bookShareNote').textContent = 'تعذر تصدير الصورة.';
+      }
+    });
+
+    // زر المشاركة (بالتعديل الأخير ليطابق التحميل تماماً بأبعاد 840x2966)
+    document.getElementById('shareBookBtn').addEventListener('click', async () => {
+      document.getElementById('bookShareNote').textContent = 'جاري تجهيز الصورة للمشاركة...';
+      try {
+        const canvas = await generateWeeklyCanvas();
+        if (!canvas) {
+          document.getElementById('bookShareNote').textContent = 'لا توجد أيام مسجلة للمشاركة.';
+          return;
+        }
+
+        const blob = await new Promise((resolve, reject) => {
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error('تعذر إنشاء الصورة')), 'image/png', 1.0);
+        });
+
+        const file = new File([blob], 'سجل-المتابعة-الأسبوعي.png', { type: 'image/png' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ 
+            files: [file], 
+            title: 'سجل المتابعة الأسبوعي', 
+            text: `إليك سجل المتابعة الخاص بـ ${currentPatientName || 'مريض'} 💚` 
+          });
+          document.getElementById('bookShareNote').textContent = 'تمت المشاركة بنجاح! ✓';
+        } else {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'سجل-المتابعة-الأسبوعي.png';
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+          document.getElementById('bookShareNote').textContent = 'تم حفظ الصورة بدقة عالية، يمكنك مشاركتها يدوياً.';
+        }
+      } catch (err) {
+        document.getElementById('bookShareNote').textContent = 'تعذرت المشاركة المباشرة.';
+      }
+    });
 
    document.getElementById('downloadBookImageBtn').addEventListener('click', async () => {
 
