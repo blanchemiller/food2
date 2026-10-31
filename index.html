@@ -155,18 +155,18 @@
   <!-- 2. محتوى واجهتك الأساسية بالكامل -->
   <div id="appContent" class="hidden w-full">
 
-    <header class="bg-white border-b border-slate-200 shadow-xs sticky top-0 z-30">
+   <header class="bg-white border-b border-slate-200 shadow-xs sticky top-0 z-30">
       <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
         
-        <!-- اللوجو (بحجم أكبر) + العنوان واسم المريض (مع مسافة أوسع للشمال) -->
+        <!-- اللوجو (بأبعاده الصحيحة 447x314) + العنوان واسم المريض -->
         <div class="flex items-center gap-4">
-          <!-- اللوجو بدون إطار وبحجم أكبر واضح -->
-          <div id="logoSlot" class="w-14 h-14 flex items-center justify-center overflow-hidden flex-shrink-0">
+          <!-- حاوية اللوجو متناسبة مع أبعاد العرض والارتفاع للصورة -->
+          <div id="logoSlot" class="w-16 h-12 flex items-center justify-center overflow-hidden flex-shrink-0">
             <img id="logoImg" src="logo.png" alt="شعار التطبيق" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('logoPlaceholder').style.display='flex';">
             <div id="logoPlaceholder" class="w-full h-full text-[10px] text-slate-400 font-bold items-center justify-center hidden">الشعار</div>
           </div>
 
-          <!-- العنوان متحرك مسافة جيدة لإعطائه مساحة -->
+          <!-- العنوان متحرك وله مساحة كافية على الشمال -->
           <div class="flex flex-col justify-center">
             <h1 class="font-black text-xl sm:text-2xl tracking-tight text-[#30253A] leading-tight">المتابعة اليومية</h1>
             <p id="welcomeUser" class="text-xs text-[#107EAF] font-bold mt-1.5 leading-none">أهلاً بك 💚</p>
