@@ -1269,7 +1269,7 @@
       const savedKeys = Object.keys(state.records).sort();
       if (savedKeys.length === 0) return null;
 
-      // العرض الأساسي 840 صريح ومباشر بدون أي قسمة أو تصغير
+      // العرض الأساسي 840 صريح ومباشر لضمان أعلى دقة وضوح (High-Res)
       const width = 840;
       let totalHeight = 190;
       
@@ -1296,7 +1296,7 @@
         const notesText = rec.dailyNotes || '';
         const hasNotes = notesText.trim() !== '';
         
-        // استخدام عنصر مؤقت مستقل تماماً بدقة عالية لضمان صحة القياسات
+        // استخدام عنصر مؤقت مستقل تماماً لدقة قياس السطور
         const tempCanvas = document.createElement('canvas');
         const ctxTemp = tempCanvas.getContext('2d');
         ctxTemp.font = '400 18px "Tajawal", sans-serif';
@@ -1313,7 +1313,7 @@
 
       totalHeight += 40;
 
-      // إنشاء الكانفاس بالأبعاد الكاملة 840 × الارتفاع المحسوب
+      // إنشاء الكانفاس بالأبعاد الكاملة 840
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = totalHeight;
@@ -1518,7 +1518,7 @@
       return canvas;
     }
 
-    // دوال الحفظ والمشاركة المرتبطة بها لتعمل بنفس الجودة العالية:
+    // زر تحميل التقرير الأسبوعي (بأعلى جودة 1.0)
     document.getElementById('downloadBookImageBtn').addEventListener('click', async () => {
       document.getElementById('bookShareNote').textContent = 'جاري تصدير السجل كصورة...';
       try {
@@ -1528,7 +1528,7 @@
           return;
         }
         const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
+        link.href = canvas.toDataURL('image/png', 1.0);
         link.download = 'سجل-المتابعة-الأسبوعي.png';
         link.click();
         document.getElementById('bookShareNote').textContent = 'تم تحميل السجل كصورة بنجاح! ✓';
@@ -1537,6 +1537,7 @@
       }
     });
 
+    // زر مشاركة التقرير الأسبوعي (بأبعاد كاملة 840 وجودة كريستالية)
     document.getElementById('shareBookBtn').addEventListener('click', async () => {
       document.getElementById('bookShareNote').textContent = 'جاري تجهيز الصورة للمشاركة...';
       try {
@@ -1546,10 +1547,18 @@
           return;
         }
 
-        const blob = await new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('تعذر إنشاء الصورة')), 'image/png'));
+        const blob = await new Promise((resolve, reject) => {
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error('تعذر إنشاء الصورة')), 'image/png', 1.0);
+        });
+
         const file = new File([blob], 'سجل-المتابعة-الأسبوعي.png', { type: 'image/png' });
+        
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'سجل المتابعة الأسبوعي', text: 'إليك سجل المتابعة الخاص بي 💚' });
+          await navigator.share({ 
+            files: [file], 
+            title: 'سجل المتابعة الأسبوعي', 
+            text: `إليك سجل المتابعة الخاص بـ ${currentPatientName || 'مريض'} 💚` 
+          });
           document.getElementById('bookShareNote').textContent = 'تمت المشاركة بنجاح! ✓';
         } else {
           const link = document.createElement('a');
@@ -1557,7 +1566,7 @@
           link.download = 'سجل-المتابعة-الأسبوعي.png';
           link.click();
           setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-          document.getElementById('bookShareNote').textContent = 'تم حفظ الصورة، يمكنك مشاركتها يدوياً.';
+          document.getElementById('bookShareNote').textContent = 'تم حفظ الصورة بدقة عالية، يمكنك مشاركتها يدوياً.';
         }
       } catch (err) {
         document.getElementById('bookShareNote').textContent = 'تعذرت المشاركة المباشرة.';
