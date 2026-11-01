@@ -1587,16 +1587,11 @@ async function generateWeeklyCanvas() {
             setTimeout(() => URL.revokeObjectURL(link.href), 1000);
             if (noteEl) noteEl.textContent = 'تم حفظ الصورة بدقة عالية، يمكنك مشاركتها يدوياً.';
           }
-
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      note.textContent = 'تم إلغاء المشاركة.';
-    } else {
-      console.error('Share Error:', err);
-      note.textContent = 'تعذرت المشاركة.';
+          } catch (err) {
+          if (noteEl) noteEl.textContent = 'تعذرت المشاركة المباشرة.';
+        }
+      });
     }
-  }
-});
     
     document.getElementById('prevDays').addEventListener('click', () => {
       state.viewAnchorDate.setDate(state.viewAnchorDate.getDate() - 7);
