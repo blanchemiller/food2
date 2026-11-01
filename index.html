@@ -10,6 +10,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- مكتبة html2canvas للتقارير الأسبوعية -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
   tailwind.config = {
     theme: {
@@ -1277,7 +1278,8 @@
       document.getElementById('journalModal').classList.add('hidden');
     });
 
-async function generateWeeklyCanvas() {
+    // 1. دالة الرسم الأساسية (مصدر الحقيقة للتقرير)
+    async function generateWeeklyCanvas() {
       const savedKeys = Object.keys(state.records).sort();
       if (savedKeys.length === 0) return null;
 
@@ -1528,7 +1530,7 @@ async function generateWeeklyCanvas() {
       return canvas;
     }
 
-    // زر التحميل الأصلي
+    // 2. زر التحميل كصورة (بأعلى جودة PNG 1.0)
     document.getElementById('downloadBookImageBtn').addEventListener('click', async () => {
       document.getElementById('bookShareNote').textContent = 'جاري تصدير السجل كصورة...';
       try {
@@ -1538,7 +1540,7 @@ async function generateWeeklyCanvas() {
           return;
         }
         const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
+        link.href = canvas.toDataURL('image/png', 1.0);
         link.download = 'سجل-المتابعة-الأسبوعي.png';
         link.click();
         document.getElementById('bookShareNote').textContent = 'تم تحميل السجل كصورة بنجاح! ✓';
@@ -1547,77 +1549,49 @@ async function generateWeeklyCanvas() {
       }
     });
 
- // زر المشاركة (يستخدم نفس ناتج دالة الرسم تماماً ليخرج بنفس جودة التحميل)
-document.getElementById('shareBookBtn').addEventListener('click', async () => {
-  const note = document.getElementById('bookShareNote');
+    // 3. زر المشاركة (يولد PDF عالي الجودة ويشارك كمستند لمنع أي ضغط في الواتساب)
+    document.getElementById('shareBookBtn').addEventListener('click', async () => {
+      document.getElementById('bookShareNote').textContent = 'جاري تجهيز تقرير الـ PDF للمشاركة...';
+      try {
+        const canvas = await generateWeeklyCanvas();
+        if (!canvas) {
+          document.getElementById('bookShareNote').textContent = 'لا توجد أيام مسجلة للمشاركة.';
+          return;
+        }
 
-  try {
-    note.textContent = 'جاري تجهيز التقرير بأعلى جودة...';
+        const { jsPDF } = window.jspdf;
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        
+        const pdfBlob = pdf.output('blob');
+        const file = new File([pdfBlob], 'سجل-المتابعة-الأسبوعي.pdf', { type: 'application/pdf' });
 
-    const canvas = await generateWeeklyCanvas();
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ 
+            files: [file], 
+            title: 'سجل المتابعة الأسبوعي', 
+            text: `تقرير المتابعة الأسبوعي لـ ${currentPatientName || 'مريض'} 💚` 
+          });
+          document.getElementById('bookShareNote').textContent = 'تم إرسال الـ PDF بنجاح! ✓';
+        } else {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(pdfBlob);
+          link.download = 'سجل-المتابعة-الأسبوعي.pdf';
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+          document.getElementById('bookShareNote').textContent = 'تم تحميل ملف الـ PDF بدقة الطباعة ✓';
+        }
 
-    if (!canvas) {
-      note.textContent = 'لا توجد أيام مسجلة للمشاركة.';
-      return;
-    }
-
-    // إنشاء ملف PNG الأصلي
-    const blob = await new Promise((resolve, reject) => {
-      canvas.toBlob(blob => {
-        if (blob) resolve(blob);
-        else reject(new Error('تعذر إنشاء الصورة'));
-      }, 'image/png');
+      } catch (err) {
+        document.getElementById('bookShareNote').textContent = 'تعذرت المشاركة المباشرة.';
+      }
     });
 
-    const file = new File(
-      [blob],
-      'سجل-المتابعة-الأسبوعي.png',
-      { type: 'image/png' }
-    );
-
-    // فتح قائمة المشاركة مباشرة
-    if (
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare({ files: [file] })
-    ) {
-      await navigator.share({
-        files: [file],
-        title: 'سجل المتابعة الأسبوعي',
-        text: 'إليك سجل المتابعة الأسبوعي 💚'
-      });
-
-      note.textContent = 'تم فتح قائمة المشاركة بنجاح ✓';
-
-    } else {
-      // بديل للمتصفحات التي لا تدعم مشاركة الملفات
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-
-      link.href = url;
-      link.download = 'سجل-المتابعة-الأسبوعي.png';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      setTimeout(() => URL.revokeObjectURL(url), 3000);
-
-      note.textContent =
-        'تم تنزيل التقرير بجودته الأصلية للمشاركة يدوياً.';
-    }
-
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      note.textContent = 'تم إلغاء المشاركة.';
-      return;
-    }
-
-    console.error('Share Error:', err);
-    note.textContent = 'تعذرت مشاركة التقرير.';
-  }
-});
-
-    
     document.getElementById('prevDays').addEventListener('click', () => {
       state.viewAnchorDate.setDate(state.viewAnchorDate.getDate() - 7);
       renderCalendar();
