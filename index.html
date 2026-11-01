@@ -1548,9 +1548,9 @@
         document.getElementById('bookShareNote').textContent = 'تعذر تصدير الصورة.';
       }
     });
-
-    // 3. زر المشاركة (يولد PDF عالي الجودة ويشارك كمستند لمنع أي ضغط في الواتساب)
-     document.getElementById('shareBookBtn').addEventListener('click', async () => {
+    
+  // 3. زر المشاركة (يولد PDF بطول التقرير بالكامل وبأعلى جودة وممنوع القطع)
+    document.getElementById('shareBookBtn').addEventListener('click', async () => {
       document.getElementById('bookShareNote').textContent = 'جاري تجهيز تقرير الـ PDF بالكامل...';
       try {
         const canvas = await generateWeeklyCanvas();
@@ -1562,11 +1562,10 @@
         const { jsPDF } = window.jspdf;
         const imgData = canvas.toDataURL('image/png', 1.0);
 
-        // تحويل أبعاد الكانفاس بالبكسل إلى مليمترات عشان الـ PDF يتطابق تماماً مع محتوى التقرير
-        const imgWidthMm = 210; // عرض A4 بالمللي
+        // ضبط عرض الصفحة على A4 وتمديد الطول تلقائياً حسب حجم التقرير الفعلي
+        const imgWidthMm = 210; 
         const imgHeightMm = (canvas.height * imgWidthMm) / canvas.width;
 
-        // إنشاء ملف PDF بنفس طول التقرير الحقيقي (صفحة واحدة طويلة تحتضن كل الأيام بدون قطع)
         const pdf = new jsPDF({
           orientation: 'p',
           unit: 'mm',
@@ -1598,12 +1597,7 @@
         document.getElementById('bookShareNote').textContent = 'تعذرت المشاركة.';
       }
     });
-
-      } catch (err) {
-        document.getElementById('bookShareNote').textContent = 'تعذرت المشاركة المباشرة.';
-      }
-    });
-
+      
     document.getElementById('prevDays').addEventListener('click', () => {
       state.viewAnchorDate.setDate(state.viewAnchorDate.getDate() - 7);
       renderCalendar();
