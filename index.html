@@ -1547,41 +1547,72 @@ async function generateWeeklyCanvas() {
       }
     });
 
-    // زر المشاركة (بالتعديل الأخير ليطابق التحميل تماماً بأبعاد 840x2966)
     document.getElementById('shareBookBtn').addEventListener('click', async () => {
-      document.getElementById('bookShareNote').textContent = 'جاري تجهيز الصورة للمشاركة...';
-      try {
-        const canvas = await generateWeeklyCanvas();
-        if (!canvas) {
-          document.getElementById('bookShareNote').textContent = 'لا توجد أيام مسجلة للمشاركة.';
-          return;
-        }
+  const note = document.getElementById('bookShareNote');
+  note.textContent = 'جاري تجهيز الصورة بأعلى جودة...';
 
-        const blob = await new Promise((resolve, reject) => {
-          canvas.toBlob(b => b ? resolve(b) : reject(new Error('تعذر إنشاء الصورة')), 'image/png', 1.0);
-        });
+  try {
+    const canvas = await generateWeeklyCanvas();
 
-        const file = new File([blob], 'سجل-المتابعة-الأسبوعي.png', { type: 'image/png' });
-        
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ 
-            files: [file], 
-            title: 'سجل المتابعة الأسبوعي', 
-            text: `إليك سجل المتابعة الخاص بـ ${currentPatientName || 'مريض'} 💚` 
-          });
-          document.getElementById('bookShareNote').textContent = 'تمت المشاركة بنجاح! ✓';
-        } else {
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = 'سجل-المتابعة-الأسبوعي.png';
-          link.click();
-          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-          document.getElementById('bookShareNote').textContent = 'تم حفظ الصورة بدقة عالية، يمكنك مشاركتها يدوياً.';
-        }
-      } catch (err) {
-        document.getElementById('bookShareNote').textContent = 'تعذرت المشاركة المباشرة.';
-      }
+    if (!canvas) {
+      note.textContent = 'لا توجد أيام مسجلة للمشاركة.';
+      return;
+    }
+
+    // إنشاء PNG بأعلى جودة دون ضغط JPEG
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error('فشل إنشاء الصورة'));
+      }, 'image/png');
     });
+
+    const file = new File(
+      [blob],
+      'سجل-المتابعة-الأسبوعي.png',
+      {
+        type: 'image/png',
+        lastModified: Date.now()
+      }
+    );
+
+    if (
+      navigator.canShare &&
+      navigator.canShare({ files: [file] })
+    ) {
+      await navigator.share({
+        files: [file],
+        title: 'سجل المتابعة الأسبوعي',
+        text: 'إليك سجل المتابعة الأسبوعي 💚'
+      });
+
+      note.textContent = 'تمت المشاركة بنجاح! ✓';
+
+    } else {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = 'سجل-المتابعة-الأسبوعي.png';
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+      note.textContent = 'تم حفظ الصورة بجودتها الأصلية، يمكنك مشاركتها يدوياً.';
+    }
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      note.textContent = 'تم إلغاء المشاركة.';
+    } else {
+      console.error('Share Error:', err);
+      note.textContent = 'تعذرت المشاركة.';
+    }
+  }
+});
     
     document.getElementById('prevDays').addEventListener('click', () => {
       state.viewAnchorDate.setDate(state.viewAnchorDate.getDate() - 7);
