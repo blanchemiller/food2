@@ -1547,14 +1547,13 @@ async function generateWeeklyCanvas() {
       }
     });
 
-    // زر المشاركة (يستخدم نفس ناتج دالة الرسم تماماً ليخرج بنفس جودة التحميل)
-    
+ // زر المشاركة (يستخدم نفس ناتج دالة الرسم تماماً ليخرج بنفس جودة التحميل)
 document.getElementById('shareBookBtn').addEventListener('click', async () => {
   const note = document.getElementById('bookShareNote');
 
-  note.textContent = 'جاري تجهيز التقرير بأعلى جودة...';
-
   try {
+    note.textContent = 'جاري تجهيز التقرير بأعلى جودة...';
+
     const canvas = await generateWeeklyCanvas();
 
     if (!canvas) {
@@ -1562,7 +1561,7 @@ document.getElementById('shareBookBtn').addEventListener('click', async () => {
       return;
     }
 
-    // نفس الصورة الأصلية المستخدمة في التحميل
+    // إنشاء ملف PNG الأصلي
     const blob = await new Promise((resolve, reject) => {
       canvas.toBlob(blob => {
         if (blob) resolve(blob);
@@ -1576,18 +1575,35 @@ document.getElementById('shareBookBtn').addEventListener('click', async () => {
       { type: 'image/png' }
     );
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-
+    // فتح قائمة المشاركة مباشرة
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({ files: [file] })
+    ) {
       await navigator.share({
         files: [file],
         title: 'سجل المتابعة الأسبوعي',
-        text: 'سجل المتابعة الأسبوعي 💚'
+        text: 'إليك سجل المتابعة الأسبوعي 💚'
       });
 
-      note.textContent = 'تمت المشاركة بنجاح! ✓';
+      note.textContent = 'تم فتح قائمة المشاركة بنجاح ✓';
 
     } else {
-      throw new Error('مشاركة الملفات غير مدعومة');
+      // بديل للمتصفحات التي لا تدعم مشاركة الملفات
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = 'سجل-المتابعة-الأسبوعي.png';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+      note.textContent =
+        'تم تنزيل التقرير بجودته الأصلية للمشاركة يدوياً.';
     }
 
   } catch (err) {
@@ -1597,9 +1613,10 @@ document.getElementById('shareBookBtn').addEventListener('click', async () => {
     }
 
     console.error('Share Error:', err);
-    note.textContent = 'تعذرت المشاركة. استخدمي زر التحميل.';
+    note.textContent = 'تعذرت مشاركة التقرير.';
   }
 });
+
     
     document.getElementById('prevDays').addEventListener('click', () => {
       state.viewAnchorDate.setDate(state.viewAnchorDate.getDate() - 7);
