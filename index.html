@@ -1528,81 +1528,65 @@ async function generateWeeklyCanvas() {
       return canvas;
     }
 
-    // زر التحميل (بالتعديل الأخير ليعمل مع الـ Canvas الصحيح)
-    document.getElementById('downloadBookImageBtn').addEventListener('click', async () => {
-      document.getElementById('bookShareNote').textContent = 'جاري تصدير السجل كصورة...';
-      try {
-        const canvas = await generateWeeklyCanvas();
-        if (!canvas) {
-          document.getElementById('bookShareNote').textContent = 'لا توجد أيام مسجلة للتصدير.';
-          return;
+    // 1. زر تحميل التقرير الأسبوعي
+    const downloadBtn = document.getElementById('downloadBookImageBtn');
+    if (downloadBtn) {
+      downloadBtn.replaceWith(downloadBtn.cloneNode(true));
+      document.getElementById('downloadBookImageBtn').addEventListener('click', async () => {
+        const noteEl = document.getElementById('bookShareNote');
+        if (noteEl) noteEl.textContent = 'جاري تصدير السجل كصورة...';
+        try {
+          const canvas = await generateWeeklyCanvas();
+          if (!canvas) {
+            if (noteEl) noteEl.textContent = 'لا توجد أيام مسجلة للتصدير.';
+            return;
+          }
+          const link = document.createElement('a');
+          link.href = canvas.toDataURL('image/png', 1.0);
+          link.download = 'سجل-المتابعة-الأسبوعي.png';
+          link.click();
+          if (noteEl) noteEl.textContent = 'تم تحميل السجل كصورة بنجاح! ✓';
+        } catch (err) {
+          if (noteEl) noteEl.textContent = 'تعذر تصدير الصورة.';
         }
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png', 1.0);
-        link.download = 'سجل-المتابعة-الأسبوعي.png';
-        link.click();
-        document.getElementById('bookShareNote').textContent = 'تم تحميل السجل كصورة بنجاح! ✓';
-      } catch (err) {
-        document.getElementById('bookShareNote').textContent = 'تعذر تصدير الصورة.';
-      }
-    });
-
-    document.getElementById('shareBookBtn').addEventListener('click', async () => {
-  const note = document.getElementById('bookShareNote');
-  note.textContent = 'جاري تجهيز الصورة بأعلى جودة...';
-
-  try {
-    const canvas = await generateWeeklyCanvas();
-
-    if (!canvas) {
-      note.textContent = 'لا توجد أيام مسجلة للمشاركة.';
-      return;
-    }
-
-    // إنشاء PNG بأعلى جودة دون ضغط JPEG
-    const blob = await new Promise((resolve, reject) => {
-      canvas.toBlob(blob => {
-        if (blob) resolve(blob);
-        else reject(new Error('فشل إنشاء الصورة'));
-      }, 'image/png');
-    });
-
-    const file = new File(
-      [blob],
-      'سجل-المتابعة-الأسبوعي.png',
-      {
-        type: 'image/png',
-        lastModified: Date.now()
-      }
-    );
-
-    if (
-      navigator.canShare &&
-      navigator.canShare({ files: [file] })
-    ) {
-      await navigator.share({
-        files: [file],
-        title: 'سجل المتابعة الأسبوعي',
-        text: 'إليك سجل المتابعة الأسبوعي 💚'
       });
-
-      note.textContent = 'تمت المشاركة بنجاح! ✓';
-
-    } else {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-
-      link.href = url;
-      link.download = 'سجل-المتابعة-الأسبوعي.png';
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      setTimeout(() => URL.revokeObjectURL(url), 3000);
-
-      note.textContent = 'تم حفظ الصورة بجودتها الأصلية، يمكنك مشاركتها يدوياً.';
     }
+
+    // 2. زر مشاركة التقرير الأسبوعي (بيولد الكانفاس 840 مباشرة ويشاركه)
+    const shareBtn = document.getElementById('shareBookBtn');
+    if (shareBtn) {
+      shareBtn.replaceWith(shareBtn.cloneNode(true));
+      document.getElementById('shareBookBtn').addEventListener('click', async () => {
+        const noteEl = document.getElementById('bookShareNote');
+        if (noteEl) noteEl.textContent = 'جاري تجهيز الصورة للمشاركة...';
+        try {
+          const canvas = await generateWeeklyCanvas();
+          if (!canvas) {
+            if (noteEl) noteEl.textContent = 'لا توجد أيام مسجلة للمشاركة.';
+            return;
+          }
+
+          const blob = await new Promise((resolve, reject) => {
+            canvas.toBlob(b => b ? resolve(b) : reject(new Error('تعذر إنشاء الصورة')), 'image/png', 1.0);
+          });
+
+          const file = new File([blob], 'سجل-المتابعة-الأسبوعي.png', { type: 'image/png' });
+          
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ 
+              files: [file], 
+              title: 'سجل المتابعة الأسبوعي', 
+              text: `إليك سجل المتابعة الخاص بـ ${currentPatientName || 'مريض'} 💚` 
+            });
+            if (noteEl) noteEl.textContent = 'تمت المشاركة بنجاح! ✓';
+          } else {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'سجل-المتابعة-الأسبوعي.png';
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+            if (noteEl) noteEl.textContent = 'تم حفظ الصورة بدقة عالية، يمكنك مشاركتها يدوياً.';
+          }
 
   } catch (err) {
     if (err.name === 'AbortError') {
