@@ -1548,32 +1548,58 @@ async function generateWeeklyCanvas() {
     });
 
     // زر المشاركة (يستخدم نفس ناتج دالة الرسم تماماً ليخرج بنفس جودة التحميل)
-    document.getElementById('shareBookBtn').addEventListener('click', async () => {
-      document.getElementById('bookShareNote').textContent = 'جاري تجهيز الصورة للمشاركة...';
-      try {
-        const canvas = await generateWeeklyCanvas();
-        if (!canvas) {
-          document.getElementById('bookShareNote').textContent = 'لا توجد أيام مسجلة للمشاركة.';
-          return;
-        }
-        canvas.toBlob(async (blob) => {
-          if (!blob) return;
-          const file = new File([blob], 'سجل-المتابعة-الأسبوعي.png', { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'سجل المتابعة الأسبوعي', text: 'تقرير المتابعة الخاص بي 💚' });
-            document.getElementById('bookShareNote').textContent = 'تمت المشاركة بنجاح! ✓';
-          } else {
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'سجل-المتابعة-الأسبوعي.png';
-            link.click();
-            document.getElementById('bookShareNote').textContent = 'تم حفظ الصورة بنفس جودة التحميل ✓';
-          }
-        }, 'image/png');
-      } catch (err) {
-        document.getElementById('bookShareNote').textContent = 'تعذرت المشاركة.';
-      }
+    
+document.getElementById('shareBookBtn').addEventListener('click', async () => {
+  const note = document.getElementById('bookShareNote');
+
+  note.textContent = 'جاري تجهيز التقرير بأعلى جودة...';
+
+  try {
+    const canvas = await generateWeeklyCanvas();
+
+    if (!canvas) {
+      note.textContent = 'لا توجد أيام مسجلة للمشاركة.';
+      return;
+    }
+
+    // نفس الصورة الأصلية المستخدمة في التحميل
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error('تعذر إنشاء الصورة'));
+      }, 'image/png');
     });
+
+    const file = new File(
+      [blob],
+      'سجل-المتابعة-الأسبوعي.png',
+      { type: 'image/png' }
+    );
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+
+      await navigator.share({
+        files: [file],
+        title: 'سجل المتابعة الأسبوعي',
+        text: 'سجل المتابعة الأسبوعي 💚'
+      });
+
+      note.textContent = 'تمت المشاركة بنجاح! ✓';
+
+    } else {
+      throw new Error('مشاركة الملفات غير مدعومة');
+    }
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      note.textContent = 'تم إلغاء المشاركة.';
+      return;
+    }
+
+    console.error('Share Error:', err);
+    note.textContent = 'تعذرت المشاركة. استخدمي زر التحميل.';
+  }
+});
     
     document.getElementById('prevDays').addEventListener('click', () => {
       state.viewAnchorDate.setDate(state.viewAnchorDate.getDate() - 7);
